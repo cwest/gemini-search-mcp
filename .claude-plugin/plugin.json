@@ -1,0 +1,15 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-plugin-manifest.json",
+  "name": "gemini-search",
+  "displayName": "Gemini Search",
+  "version": "0.1.0",
+  "description": "Web search for Claude Code via the gemini-search MCP server (Google Search grounding through Gemini), plus a skill that steers the model to prefer it over the built-in WebSearch.",
+  "author": {
+    "name": "Casey West",
+    "url": "https://github.com/cwest"
+  },
+  "homepage": "https://github.com/cwest/gemini-search-mcp",
+  "repository": "https://github.com/cwest/gemini-search-mcp",
+  "license": "Apache-2.0",
+  "keywords": ["web-search", "gemini", "google-search", "grounding", "mcp"]
+}

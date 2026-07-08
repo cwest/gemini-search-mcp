@@ -1,0 +1,7 @@
+{
+  "mcpServers": {
+    "gemini-search": {
+      "command": "${CLAUDE_PLUGIN_ROOT}/bin/gemini-search-mcp"
+    }
+  }
+}
