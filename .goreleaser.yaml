@@ -1,0 +1,22 @@
+version: 2
+builds:
+  - id: gemini-search-mcp
+    main: .
+    binary: gemini-search-mcp
+    env: [CGO_ENABLED=0]
+    goos: [linux, darwin]
+    goarch: [amd64, arm64]
+    ldflags:
+      - -s -w
+      - -X github.com/cwest/gemini-search-mcp/internal/version.Version={{.Version}}
+      - -X github.com/cwest/gemini-search-mcp/internal/version.Commit={{.Commit}}
+      - -X github.com/cwest/gemini-search-mcp/internal/version.Date={{.Date}}
+archives:
+  - formats: [tar.gz]
+    name_template: "{{ .ProjectName }}_{{ .Os }}_{{ .Arch }}"
+checksum:
+  name_template: "checksums.txt"
+release:
+  prerelease: auto
+changelog:
+  use: github
