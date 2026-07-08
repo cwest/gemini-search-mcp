@@ -1,0 +1,23 @@
+{
+  "candidates": [
+    {
+      "content": {
+        "role": "model",
+        "parts": [{ "text": "Go 1.26.4 is the latest stable release." }]
+      },
+      "groundingMetadata": {
+        "webSearchQueries": ["latest Go version"],
+        "groundingChunks": [
+          { "web": { "domain": "go.dev", "title": "Go Downloads", "uri": "https://vertexaisearch.example/redirect/abc" } },
+          { "web": { "domain": "endoflife.date", "title": "Go EOL", "uri": "https://vertexaisearch.example/redirect/def" } }
+        ]
+      }
+    }
+  ],
+  "usageMetadata": {
+    "promptTokenCount": 12,
+    "candidatesTokenCount": 34,
+    "thoughtsTokenCount": 5,
+    "totalTokenCount": 51
+  }
+}
