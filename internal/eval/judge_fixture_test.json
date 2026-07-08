@@ -1,0 +1,5 @@
+{
+  "fenced": "Here is my assessment.\n\n```json\n{\n  \"reasoning\": \"The answer names Go 1.26.4 as the latest stable release, which matches the expected assertion. It is concise with no filler. The cited source go.dev is the authoritative domain.\",\n  \"relevance\": 1.0,\n  \"correctness\": 0.9,\n  \"source_quality\": 0.95\n}\n```\nThat concludes my evaluation.",
+  "bare": "{\"reasoning\":\"Adequate but padded.\",\"relevance\":0.6,\"correctness\":0.7,\"source_quality\":0.5}",
+  "out_of_range": "{\"reasoning\":\"Model returned out-of-range scores.\",\"relevance\":1.4,\"correctness\":-0.3,\"source_quality\":0.5}"
+}
