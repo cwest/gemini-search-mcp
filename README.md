@@ -1,0 +1,202 @@
+<!-- repo:managed -->
+# gemini-search-mcp
+
+An MCP server that gives your assistant one tool: `web_search`. Ask a
+question, and it runs a Google search through Gemini, reads the results, and
+hands back a written answer with the sources it used. The model does the
+searching and the reading; you get the answer and the links.
+
+It talks to Gemini one of two ways: through Vertex AI (your Google Cloud
+project) or through AI Studio (an API key). Pick whichever you already have.
+
+## How it works
+
+```mermaid
+flowchart LR
+    A[MCP client] -->|web_search query| B[gemini-search-mcp]
+    B -->|GenerateContent + GoogleSearch| C[Gemini]
+    C -->|grounded answer + citations| B
+    B -->|answer + sources| A
+```
+
+The server speaks MCP over stdio, so any MCP client can launch it as a
+subprocess and call the tool.
+
+## Install
+
+With Go:
+
+```sh
+go install github.com/cwest/gemini-search-mcp@latest
+```
+
+That drops a `gemini-search-mcp` binary in your `$GOBIN` (usually
+`~/go/bin`). Make sure that's on your `PATH`.
+
+Prefer a prebuilt binary? Grab one from the
+[releases page](https://github.com/cwest/gemini-search-mcp/releases),
+extract it, and put it somewhere on your `PATH`.
+
+## Configuration
+
+The server reads everything from the environment. It checks for Vertex AI
+first; if that isn't set up, it falls back to AI Studio. If neither is
+configured, it exits at startup with a message telling you what's missing.
+
+### Vertex AI
+
+Use this if you have a Google Cloud project with Vertex AI enabled.
+
+| Variable | Required | Notes |
+| --- | --- | --- |
+| `GOOGLE_GENAI_USE_VERTEXAI` | one of these | Set to `true` to force Vertex. |
+| `GOOGLE_CLOUD_PROJECT` | yes | Your project id. |
+| `GOOGLE_CLOUD_LOCATION` | yes | e.g. `global` or `us-central1`. |
+| `GOOGLE_APPLICATION_CREDENTIALS` | usually | Path to a service-account key file, unless you're already authenticated with application default credentials. |
+
+Setting `GOOGLE_CLOUD_PROJECT` and `GOOGLE_CLOUD_LOCATION` together is enough
+to select Vertex; the `GOOGLE_GENAI_USE_VERTEXAI` flag is there if you want to
+be explicit.
+
+### AI Studio
+
+The quick path. Get a key from [AI Studio](https://aistudio.google.com/apikey).
+
+| Variable | Required | Notes |
+| --- | --- | --- |
+| `GEMINI_API_KEY` | yes | Your AI Studio API key. `GOOGLE_API_KEY` works too. |
+
+### Optional, either mode
+
+| Variable | Default | Notes |
+| --- | --- | --- |
+| `GEMINI_SEARCH_MODEL` | `gemini-3.1-flash-lite` | The Gemini model to query. See [Which model?](#which-model) for why this is the default. |
+| `GEMINI_SEARCH_TIMEOUT` | `30s` | Per-search deadline, as a Go duration (`45s`, `2m`). |
+
+One caveat worth knowing: on Vertex AI the source list includes the domain for
+each citation. On AI Studio that field comes back empty, so you'll see the page
+title and URL but not a bare domain.
+
+## Which model?
+
+The default is `gemini-3.1-flash-lite`, and that's an evidence-based choice, not a
+guess. We built an eval harness (see [`evals/`](evals/README.md)) that runs a golden
+query set through several models and scores the answers with a *different* model
+family as judge (Claude, to avoid self-grading bias). The headline from the first
+run (12 cases, 2026-06-14):
+
+| Model | Relevance | Correctness | Source quality | p50 latency | $/1k queries |
+| --- | --- | --- | --- | --- | --- |
+| **gemini-3.1-flash-lite** | **0.92** | **0.88** | **0.60** | **3.0 s** | **$0.13** |
+| gemini-3.5-flash | 0.92 | 0.88 | 0.47 | 3.9 s | $0.98 |
+| gemini-3.1-pro-preview | 0.59 | 0.54 | 0.20 | 20.7 s | $2.81 |
+
+Flash-Lite matched or beat the larger models on quality while being far faster and
+cheaper — because for grounded search, answer quality comes mostly from Google
+Search, not from model size. The numbers, methodology, caveats (it's a small
+single-run sample), and instructions to reproduce or extend it are in
+[`evals/README.md`](evals/README.md). Pick a different model with `GEMINI_SEARCH_MODEL`
+if your workload disagrees — and if you do, run the eval and tell us what you found.
+
+## The web_search tool
+
+**Input:**
+
+| Field | Type | Description |
+| --- | --- | --- |
+| `query` | string | What you want to know, in plain language. |
+
+**Output.** The tool returns markdown text: the answer, then a numbered list of
+sources, then the searches Gemini actually ran. It also returns the same data
+in structured form (`answer`, `sources`, `queries`) for clients that prefer to
+parse it.
+
+A response looks roughly like this:
+
+```text
+Go 1.26.4 is the latest stable release.
+
+Sources:
+1. go.dev — Go Downloads
+   https://go.dev/dl/
+2. endoflife.date — Go EOL
+   https://endoflife.date/go
+
+Searches run: latest Go version
+```
+
+If a search fails, the tool returns an error result with the reason instead of
+crashing the server, so the session stays alive for the next call.
+
+## Register it with a client
+
+For Claude Code:
+
+```bash
+claude mcp add -s user gemini-search -- gemini-search-mcp
+```
+
+Your client launches the binary and passes the environment through, so set the
+provider variables (above) wherever that client reads its environment.
+
+Any MCP client works the same way: point it at the `gemini-search-mcp` binary
+and let it run over stdio.
+
+## Claude Code plugin
+
+Instead of registering the server by hand, install `gemini-search-mcp` as a
+Claude Code plugin. The plugin auto-registers the MCP server and ships a skill
+that steers the model to prefer this tool for web search.
+
+The plugin lives in this repository, so point Claude Code at it with
+`--plugin-dir`:
+
+```bash
+claude --plugin-dir /path/to/gemini-search-mcp
+```
+
+(Or add it to a marketplace and `claude plugin install gemini-search@<marketplace>`.)
+
+### Fetch the binary
+
+The plugin's MCP config launches `${CLAUDE_PLUGIN_ROOT}/bin/gemini-search-mcp`,
+so download a release binary into the plugin's `bin/` first:
+
+```bash
+scripts/install-plugin-binary.sh           # latest release
+scripts/install-plugin-binary.sh v0.2.0    # a specific tag
+```
+
+The script detects your OS and architecture, downloads the matching GoReleaser
+archive from the [releases page](https://github.com/cwest/gemini-search-mcp/releases),
+verifies it against `checksums.txt`, and extracts the binary into `bin/`. When
+Claude Code runs it, `CLAUDE_PLUGIN_ROOT` is already set; running it by hand
+installs next to the plugin instead.
+
+### Set the provider environment
+
+The plugin does **not** ship any credentials — you supply your own. Set either
+the Vertex AI variables (`GOOGLE_GENAI_USE_VERTEXAI`, `GOOGLE_CLOUD_PROJECT`,
+`GOOGLE_CLOUD_LOCATION`, and usually `GOOGLE_APPLICATION_CREDENTIALS`) or an AI
+Studio key (`GEMINI_API_KEY`) in the environment Claude Code launches from. See
+[Configuration](#configuration) for the full list.
+
+To make Claude Code prefer this tool over the built-in `WebSearch`, add
+`"permissions": {"deny": ["WebSearch"]}` to your settings. For that and for
+steering other agents (Gemini CLI, opencode, OpenAI-compatible clients), see
+[docs/prefer-web-search.md](docs/prefer-web-search.md).
+
+## Learn more
+
+- [Grounding with Google Search](https://ai.google.dev/gemini-api/docs/google-search?utm_campaign=CDR_0x5d16fa53_awareness_bBUGANIZER_ID_PLACEHOLDER&utm_medium=external&utm_source=lab)
+  — the Gemini API feature this server is built on.
+- This project has a companion write-up series:
+  <https://caseywest.com/SERIES-SLUG-PLACEHOLDER>
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) and our [Code of Conduct](CODE_OF_CONDUCT.md).
+
+## License
+
+This project is licensed under the [Apache-2.0 License](LICENSE).
