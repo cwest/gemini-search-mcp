@@ -1,0 +1,30 @@
+# gemini-search-mcp — human-labeled validation set (PLACEHOLDER)
+#
+# !!! REPLACE with real human labels !!!
+#
+# These rows are FAKE, hand-invented placeholders that exist only so the file
+# format is documented and the loader/κ code has something to parse. They are
+# NOT real judgments and MUST NOT be used to validate the judge. A human must
+# score a ~20-30 case subset of evals/dataset/cases.yaml by hand and overwrite
+# this file before any Cohen's κ number can be trusted (target κ > 0.6 per the
+# eval design before relying on the LLM judge).
+#
+# Format: a list of cases. Each `case_id` MUST match an id in
+# evals/dataset/cases.yaml. `scores` maps a dimension to a bucket. Buckets are
+# low | med | high (the judge's [0,1] score is bucketed the same way via
+# BucketScore: <1/3 low, <2/3 med, else high). Omit a dimension you didn't rate.
+#
+# Dimensions: relevance | correctness | source_quality | faithfulness |
+#             citation_precision | citation_recall
+
+- case_id: go-latest-version          # REPLACE: fake placeholder rating
+  scores:
+    relevance: high
+    correctness: high
+    source_quality: med
+
+- case_id: nonexistent-city           # REPLACE: fake placeholder rating
+  scores:
+    relevance: high
+    correctness: high
+    source_quality: low

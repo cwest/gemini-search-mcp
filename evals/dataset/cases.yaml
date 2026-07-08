@@ -1,0 +1,98 @@
+# Golden evaluation cases for gemini-search-mcp.
+#
+# Each case is a query the harness runs through every configured Gemini model;
+# the answer + sources are scored by the Claude-on-Vertex judge against the
+# expectations below. These are judge-checked, not string-matched, so phrase
+# expect_assertions as observable properties of a good answer.
+#
+# Categories: factual | temporal | how-to | multi-hop | ambiguous | no-good-answer
+# expect_domains is optional and only nudges the source-quality score.
+
+- id: speed-of-light
+  query: "What is the speed of light in a vacuum, in meters per second?"
+  category: factual
+  expect_assertions:
+    - "gives 299,792,458 m/s (or ~3x10^8 m/s)"
+  expect_domains: ["wikipedia.org", "nist.gov"]
+
+- id: tallest-mountain
+  query: "What is the tallest mountain on Earth measured from sea level?"
+  category: factual
+  expect_assertions:
+    - "names Mount Everest"
+    - "gives a height of roughly 8,849 m / 29,032 ft"
+
+- id: go-latest-version
+  query: "What is the latest stable version of Go?"
+  category: temporal
+  expect_assertions:
+    - "names a Go 1.x version as the latest stable release"
+  expect_domains: ["go.dev"]
+  notes: "answer changes over time; judge against 'as of <run date>'"
+
+- id: us-president-current
+  query: "Who is the current President of the United States?"
+  category: temporal
+  expect_assertions:
+    - "names the person holding the office as of the run date"
+    - "does not name a clearly former president as current"
+  notes: "freshness-sensitive; judge against 'as of <run date>'"
+
+- id: python-virtualenv
+  query: "How do I create and activate a Python virtual environment on macOS?"
+  category: how-to
+  expect_assertions:
+    - "shows creating a venv (e.g. python3 -m venv) "
+    - "shows activating it (e.g. source .../bin/activate)"
+  expect_domains: ["docs.python.org"]
+
+- id: git-undo-last-commit
+  query: "How do I undo the last Git commit but keep the changes staged?"
+  category: how-to
+  expect_assertions:
+    - "recommends git reset --soft HEAD~1 (or equivalent that keeps changes)"
+    - "does not recommend a destructive reset --hard that discards the work"
+
+- id: einstein-nobel-topic
+  query: "For what specific work did Albert Einstein win the Nobel Prize in Physics?"
+  category: multi-hop
+  expect_assertions:
+    - "states it was for the photoelectric effect"
+    - "does NOT attribute the prize to relativity"
+  notes: "common misconception trap; relativity did not win the prize"
+
+- id: ceo-then-hometown
+  query: "Who is the CEO of the company that makes the ChatGPT product, and where were they born?"
+  category: multi-hop
+  expect_assertions:
+    - "identifies OpenAI as the maker of ChatGPT"
+    - "names the current CEO and a birthplace consistent with that person"
+
+- id: jaguar-ambiguous
+  query: "Tell me about the jaguar."
+  category: ambiguous
+  expect_assertions:
+    - "acknowledges the term is ambiguous (animal vs car brand vs other)"
+    - "does not silently assume one meaning without noting the ambiguity"
+
+- id: best-language
+  query: "What is the best programming language?"
+  category: ambiguous
+  expect_assertions:
+    - "treats 'best' as context-dependent rather than naming one absolute winner"
+    - "ties the recommendation to use cases or criteria"
+
+- id: nonexistent-city
+  query: "What is the population of the Martian city of Bradbury Heights?"
+  category: no-good-answer
+  expect_assertions:
+    - "states there is no such city / no data, without inventing a figure"
+  notes: "adversarial: must refuse to hallucinate a population"
+
+- id: fake-study-citation
+  query: "Summarize the 2023 Harvard study proving that drinking coffee cures color blindness."
+  category: no-good-answer
+  expect_assertions:
+    - "states no such study appears to exist rather than fabricating a summary"
+    - "does not invent authors, findings, or a citation"
+  notes: "adversarial: false premise; correct behavior is to push back"
