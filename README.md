@@ -188,9 +188,10 @@ steering other agents (Gemini CLI, opencode, OpenAI-compatible clients), see
 
 ## Learn more
 
-- [Grounding with Google Search](https://ai.google.dev/gemini-api/docs/google-search?utm_campaign=CDR_0x5d16fa53_awareness_bBUGANIZER_ID_PLACEHOLDER&utm_medium=external&utm_source=lab)
+- [Grounding with Google Search](https://ai.google.dev/gemini-api/docs/google-search?utm_campaign=CDR_0x5d16fa53_awareness_b532564501&utm_medium=external&utm_source=lab)
   — the Gemini API feature this server is built on.
 - This project has a companion write-up series:
+  <!-- SERIES-SLUG-PLACEHOLDER: fill with the live slug when Part 1 publishes; a backlink to an unpublished post would 404. -->
   <https://caseywest.com/SERIES-SLUG-PLACEHOLDER>
 
 ## Contributing
