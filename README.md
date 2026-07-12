@@ -82,19 +82,22 @@ title and URL but not a bare domain.
 The default is `gemini-3.1-flash-lite`, and that's an evidence-based choice, not a
 guess. We built an eval harness (see [`evals/`](evals/README.md)) that runs a golden
 query set through several models and scores the answers with a *different* model
-family as judge (Claude, to avoid self-grading bias). The headline from the first
-run (12 cases, 2026-06-14):
+family as judge (`claude-opus-4-8` on Vertex, to avoid self-grading bias). The
+headline from the current run (24 cases, 2026-07-12):
 
-| Model | Relevance | Correctness | Source quality | p50 latency | $/1k queries |
-| --- | --- | --- | --- | --- | --- |
-| **gemini-3.1-flash-lite** | **0.92** | **0.88** | **0.60** | **3.0 s** | **$0.13** |
-| gemini-3.5-flash | 0.92 | 0.88 | 0.47 | 3.9 s | $0.98 |
-| gemini-3.1-pro-preview | 0.59 | 0.54 | 0.20 | 20.7 s | $2.81 |
+| Model | Relevance | Correctness | Source quality | Faithfulness | Cite P/R | p50 latency | $/1k queries |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| **gemini-3.1-flash-lite** | **0.92** | **0.87** | **0.53** | **0.92** | **0.97 / 0.31** | **2.5 s** | **$0.69** |
+| gemini-3.5-flash | 0.88 | 0.82 | 0.33 | 0.84 | 0.87 / 0.35 | 3.2 s | $2.98 |
+| gemini-3.1-pro-preview | 0.71 | 0.69 | 0.34 | 0.78 | 0.86 / 0.38 | 11.0 s | $49.76 |
 
 Flash-Lite matched or beat the larger models on quality while being far faster and
 cheaper — because for grounded search, answer quality comes mostly from Google
-Search, not from model size. The numbers, methodology, caveats (it's a small
-single-run sample), and instructions to reproduce or extend it are in
+Search, not from model size. The judge itself is validated against a human
+reference label set (Cohen's κ): agreement is strong on relevance (κ=1.00) and
+source quality (κ=0.87), and moderate on correctness (κ=0.52), so we don't treat
+the correctness numbers as fully judge-validated. The full numbers, methodology,
+κ-validation, and instructions to reproduce or extend it are in
 [`evals/README.md`](evals/README.md). Pick a different model with `GEMINI_SEARCH_MODEL`
 if your workload disagrees — and if you do, run the eval and tell us what you found.
 
