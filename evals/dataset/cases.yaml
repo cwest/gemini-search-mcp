@@ -96,3 +96,92 @@
     - "states no such study appears to exist rather than fabricating a summary"
     - "does not invent authors, findings, or a citation"
   notes: "adversarial: false premise; correct behavior is to push back"
+
+- id: boiling-point-water
+  query: "At what temperature does water boil at sea level, in Celsius and Fahrenheit?"
+  category: factual
+  expect_assertions:
+    - "gives 100 degrees Celsius"
+    - "gives 212 degrees Fahrenheit"
+  expect_domains: ["wikipedia.org"]
+
+- id: largest-ocean
+  query: "What is the largest ocean on Earth by surface area?"
+  category: factual
+  expect_assertions:
+    - "names the Pacific Ocean"
+  expect_domains: ["wikipedia.org", "noaa.gov"]
+
+- id: python-latest-version
+  query: "What is the latest stable release of Python?"
+  category: temporal
+  expect_assertions:
+    - "names a Python 3.x version as the latest stable release"
+  expect_domains: ["python.org"]
+  notes: "answer changes over time; judge against 'as of <run date>'"
+
+- id: uk-prime-minister
+  query: "Who is the current Prime Minister of the United Kingdom?"
+  category: temporal
+  expect_assertions:
+    - "names the person holding the office as of the run date"
+    - "does not name a clearly former prime minister as current"
+  notes: "freshness-sensitive; judge against 'as of <run date>'"
+
+- id: tar-extract
+  query: "How do I extract a .tar.gz archive on the Linux command line?"
+  category: how-to
+  expect_assertions:
+    - "shows a working command (e.g. tar -xzf archive.tar.gz)"
+  expect_domains: ["man7.org", "gnu.org"]
+
+- id: find-large-files
+  query: "How do I find the largest files in a directory tree on Linux?"
+  category: how-to
+  expect_assertions:
+    - "shows a working approach (e.g. du + sort, or find with -size)"
+    - "does not recommend a command that deletes files"
+
+- id: moon-landing-then-age
+  query: "Which mission first landed humans on the Moon, and how many years ago was that from today?"
+  category: multi-hop
+  expect_assertions:
+    - "identifies Apollo 11 (1969) as the first crewed Moon landing"
+    - "computes an elapsed number of years consistent with the run date"
+  notes: "two-hop: identify the event, then compute elapsed time"
+
+- id: telephone-inventor-country
+  query: "Who is credited with patenting the first practical telephone, and in which country was that person born?"
+  category: multi-hop
+  expect_assertions:
+    - "names Alexander Graham Bell"
+    - "states he was born in Scotland (United Kingdom)"
+
+- id: python-versus-snake
+  query: "Tell me about python."
+  category: ambiguous
+  expect_assertions:
+    - "acknowledges the term is ambiguous (programming language vs snake)"
+    - "does not silently assume one meaning without noting the ambiguity"
+
+- id: best-database
+  query: "What is the best database?"
+  category: ambiguous
+  expect_assertions:
+    - "treats 'best' as context-dependent rather than naming one absolute winner"
+    - "ties the recommendation to use cases or criteria"
+
+- id: unicorn-population
+  query: "What is the current global population of wild unicorns?"
+  category: no-good-answer
+  expect_assertions:
+    - "states unicorns are mythical / no such population exists, without inventing a figure"
+  notes: "adversarial: must refuse to hallucinate a population for a fictional animal"
+
+- id: fake-treaty
+  query: "What were the main terms of the 2019 Treaty of Ellesmere between Canada and Norway?"
+  category: no-good-answer
+  expect_assertions:
+    - "states no such treaty appears to exist rather than fabricating terms"
+    - "does not invent signatories, dates, or provisions"
+  notes: "adversarial: false premise; correct behavior is to push back"
