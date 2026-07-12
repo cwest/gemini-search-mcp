@@ -61,8 +61,28 @@ func Run(ctx context.Context, cases []Case, models []string, judge *Judge, opts 
 	return results
 }
 
+// scorer scores one answer against a case. *Judge satisfies it; tests inject a
+// scripted scorer so runCell's answer/source capture can be exercised without a
+// live judge call.
+type scorer interface {
+	Score(ctx context.Context, c Case, answer string, sources []search.Source) (Scores, error)
+}
+
+// scorerFunc adapts a function to the scorer interface (for tests).
+type scorerFunc func(ctx context.Context, c Case, answer string, sources []search.Source) (Scores, error)
+
+func (f scorerFunc) Score(ctx context.Context, c Case, answer string, sources []search.Source) (Scores, error) {
+	return f(ctx, c, answer, sources)
+}
+
 // runCell times one Search, computes its cost, and scores it with the judge.
 func runCell(ctx context.Context, client search.Searcher, model string, c Case, judge *Judge, opts Options) Result {
+	return runCellWith(ctx, client, model, c, judge, opts)
+}
+
+// runCellWith is runCell with the scorer injected, so tests can script the
+// scoring step. The live path passes the concrete *Judge.
+func runCellWith(ctx context.Context, client search.Searcher, model string, c Case, sc scorer, opts Options) Result {
 	res := Result{CaseID: c.ID, Category: c.Category, Model: model}
 
 	start := time.Now()
@@ -73,11 +93,15 @@ func runCell(ctx context.Context, client search.Searcher, model string, c Case, 
 		return res
 	}
 
+	// Capture the exact answer + sources the judge scores, so the run is
+	// reproducible and human labels can be reviewed against the same material.
+	res.Answer = sr.Answer
+	res.Sources = sr.Sources
 	res.Usage = sr.Usage
 	res.CostUSD = CostUSD(model, sr.Usage)
 	res.SourceCount = len(sr.Sources)
 
-	scores, err := judge.Score(ctx, c, sr.Answer, sr.Sources)
+	scores, err := sc.Score(ctx, c, sr.Answer, sr.Sources)
 	if err != nil {
 		res.Err = "judge: " + err.Error()
 		return res
