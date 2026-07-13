@@ -42,8 +42,13 @@
 #   well-written but describe ONLY one meaning (the animal; the language) and
 #   never acknowledge the ambiguity the case requires — a real failure of the
 #   ambiguous category, not a knowledge error.
-# - moon-landing-then-age: correctness=med. Apollo 11 / 1969 is right, but the
-#   elapsed-years arithmetic ("56 years ago" as of 2026-07-12) is off by one.
+# - moon-landing-then-age: correctness=high. Apollo 11 / 1969 is right, and the
+#   elapsed-years answer ("56 years ago" as of 2026-07-12) is a defensible reading
+#   of the ambiguous "how many years ago": plain subtraction gives 57 (numeral
+#   count) but completed calendar anniversaries give 56 (the July-20 anniversary
+#   has not yet occurred as of the run date). The model chose the stricter
+#   completed-years interpretation and showed date-anchored reasoning, satisfying
+#   both assertions — not a math error.
 # - no-source cells (git-undo, best-language, tar-extract, best-database,
 #   fake-treaty, nonexistent-city, python-versus-snake): source_quality=low
 #   because the model answered from its own knowledge and returned zero sources.
@@ -161,7 +166,7 @@
 - case_id: moon-landing-then-age
   scores:
     relevance: high
-    correctness: med
+    correctness: high
     source_quality: high
 
 - case_id: telephone-inventor-country
