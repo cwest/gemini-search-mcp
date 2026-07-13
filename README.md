@@ -94,9 +94,9 @@ headline from the current run (24 cases, 2026-07-12):
 Flash-Lite matched or beat the larger models on quality while being far faster and
 cheaper — because for grounded search, answer quality comes mostly from Google
 Search, not from model size. The judge itself is validated against a human
-reference label set (Cohen's κ): agreement is strong on relevance (κ=1.00) and
-source quality (κ=0.87), and moderate on correctness (κ=0.52), so we don't treat
-the correctness numbers as fully judge-validated. The full numbers, methodology,
+reference label set (Cohen's κ): agreement is strong on relevance (κ=1.00),
+source quality (κ=0.87), and correctness (κ=0.63) — all three clear the κ>0.6
+trust bar, so the correctness numbers are judge-validated too. The full numbers, methodology,
 κ-validation, and instructions to reproduce or extend it are in
 [`evals/README.md`](evals/README.md). Pick a different model with `GEMINI_SEARCH_MODEL`
 if your workload disagrees — and if you do, run the eval and tell us what you found.

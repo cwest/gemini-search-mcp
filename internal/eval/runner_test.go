@@ -36,7 +36,7 @@ func (s stubSearcher) Search(_ context.Context, _ string) (*search.Result, error
 // model's answer text and cited sources so a labeled run is reproducible and can
 // be reviewed against the exact material the judge saw.
 //
-// The judge is scripted through scoreCell's injected scorer so no network call
+// The judge is scripted through runCellWith's injected scorer so no network call
 // happens; this test only asserts the captured answer/sources.
 func TestRunCellCapturesAnswerAndSources(t *testing.T) {
 	srcs := []search.Source{

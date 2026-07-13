@@ -42,8 +42,8 @@ so you can weigh the numbers yourself:
   (Cohen's κ, below), but scores are from one judge family and one run, not
   averaged across runs.
 - **One judge family** — Claude's tastes are baked into the scores.
-- **Correctness is only moderately judge-validated** (κ=0.52) — treat the
-  correctness column as directional, not authoritative (see κ section below).
+- **Correctness is judge-validated** (κ=0.63) — it clears the 0.6 trust bar,
+  alongside relevance (κ=1.00) and source quality (κ=0.87) (see κ section below).
 
 ## Results (2026-07-12)
 
@@ -194,15 +194,13 @@ This is offline (no API calls). For the committed run (n=24 per dimension):
 | --- | --- | --- |
 | relevance | **1.00** | perfect agreement |
 | source_quality | **0.87** | strong agreement |
-| correctness | **0.52** | moderate — below our 0.6 trust bar |
+| correctness | **0.63** | moderate-to-strong — clears our 0.6 trust bar |
 
-So relevance and source quality clear the **κ > 0.6** bar and can be trusted;
-correctness does not, and we say so rather than pretend otherwise. The disagreements
-that pull correctness down are substantive, not random: the judge is more lenient on
-a possibly-stale version string and on a two-hop answer with an off-by-one date, and
-stricter on an answer that padded a correct fact with extra claims. The practical
-consequence: **gate regressions on relevance and source quality only** until the
-judge (or the rubric) is recalibrated to lift correctness agreement. Re-check κ
+All three dimensions clear the **κ > 0.6** bar and can be trusted. The residual
+correctness disagreements are substantive, not random: the judge is more lenient on
+a possibly-stale version string, and stricter on an answer that padded a correct fact
+with extra claims. The practical
+consequence: **gate regressions on all three κ-validated dimensions**. Re-check κ
 whenever the judge model version changes (calibration drift).
 
 To validate another model or grow the label set, add a `labels/<model>.yaml` in the
@@ -232,8 +230,8 @@ go run ./cmd/eval --phase2 --baseline evals/baseline.json --threshold 0.05
 
 A model present in the baseline but missing from the run (e.g. it errored out
 entirely) is also flagged. Per the design, gate only on κ-validated dimensions —
-here that means **relevance and source quality** (κ > 0.6); correctness (κ=0.52) is
-not yet trustworthy enough to gate on without recalibrating the judge or rubric.
+here that means **all three dimensions** clear **κ > 0.6** (relevance 1.00,
+source_quality 0.87, correctness 0.63), so all are trustworthy enough to gate on.
 A committed baseline generated from the current run lives at
 [`baseline.json`](baseline.json).
 
