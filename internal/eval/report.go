@@ -26,12 +26,16 @@ import (
 // Result is one case×model evaluation cell: the judge's scores plus operational
 // metrics. Err is non-empty when the generation or judging of this cell failed.
 //
+// Answer and Sources capture the exact model output the judge scored, so a run
+// is reproducible and human labels can be drawn against the same material.
 // Faithfulness and Citations are only populated on live runs (they need fetched
 // source text); they are nil otherwise.
 type Result struct {
 	CaseID       string              `json:"case_id"`
 	Category     string              `json:"category"`
 	Model        string              `json:"model"`
+	Answer       string              `json:"answer,omitempty"`
+	Sources      []search.Source     `json:"sources,omitempty"`
 	Scores       Scores              `json:"scores"`
 	Faithfulness *FaithfulnessResult `json:"faithfulness,omitempty"`
 	Citations    *CitationResult     `json:"citations,omitempty"`

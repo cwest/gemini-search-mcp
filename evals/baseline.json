@@ -1,0 +1,28 @@
+{
+  "models": {
+    "gemini-3.1-flash-lite": {
+      "relevance": 0.9154166666666667,
+      "correctness": 0.8662499999999999,
+      "source_quality": 0.525,
+      "faithfulness": 0.9243254614098604,
+      "citation_precision": 0.9654605263157895,
+      "citation_recall": 0.3077163566928892
+    },
+    "gemini-3.1-pro-preview": {
+      "relevance": 0.7120833333333333,
+      "correctness": 0.6874999999999999,
+      "source_quality": 0.33749999999999997,
+      "faithfulness": 0.7786251681412971,
+      "citation_precision": 0.863095238095238,
+      "citation_recall": 0.3826221706784787
+    },
+    "gemini-3.5-flash": {
+      "relevance": 0.8845833333333334,
+      "correctness": 0.81875,
+      "source_quality": 0.32916666666666655,
+      "faithfulness": 0.840843965975545,
+      "citation_precision": 0.8656593406593407,
+      "citation_recall": 0.3510745215124599
+    }
+  }
+}

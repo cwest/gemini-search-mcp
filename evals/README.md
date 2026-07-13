@@ -36,44 +36,65 @@ a strict JSON score per dimension.
 This is a pragmatic v1, not a published benchmark. Known limitations, stated plainly
 so you can weigh the numbers yourself:
 
-- **Small sample** (12 cases per model) — results are directional, not definitive.
-- **Single judge, single run** — the κ-validation machinery exists (Phase 2) but
-  the shipped human labels are placeholders, so the judge isn't validated yet;
-  no averaging across runs.
+- **Modest sample** (24 cases per model, balanced across six categories) — a strong
+  signal, not a published-benchmark-scale study.
+- **Single judge, single run** — the judge is validated against human labels
+  (Cohen's κ, below), but scores are from one judge family and one run, not
+  averaged across runs.
 - **One judge family** — Claude's tastes are baked into the scores.
+- **Correctness is judge-validated** (κ=0.63) — it clears the 0.6 trust bar,
+  alongside relevance (κ=1.00) and source quality (κ=0.87) (see κ section below).
 
-Treat the numbers as a strong signal, not gospel. The harness is here so you can run
-your own cases and form your own view.
+## Results (2026-07-12)
 
-## Results (2026-06-14)
-
-12 cases × 3 models, judged by `claude-opus-4-8` on Vertex. Vertex `global` region.
+24 cases × 3 models, judged by `claude-opus-4-8` on Vertex. Vertex `global` region.
+Committed run: [`results/2026-07-12T23:22:55Z.json`](results/2026-07-12T23:22:55Z.json)
+(the `.md` alongside it is the rendered report).
 
 | Model | Relevance | Correctness | Source quality | p50 latency | $/1k queries | Errors |
 | --- | --- | --- | --- | --- | --- | --- |
-| **gemini-3.1-flash-lite** | **0.92** | **0.88** | **0.60** | **3.0 s** | **$0.13** | 0% |
-| gemini-3.5-flash | 0.92 | 0.88 | 0.47 | 3.9 s | $0.98 | 0% |
-| gemini-3.1-pro-preview | 0.59 | 0.54 | 0.20 | 20.7 s | $2.81 | 0% |
+| **gemini-3.1-flash-lite** | **0.92** | **0.87** | **0.53** | **2.5 s** | **$0.69** | 0% |
+| gemini-3.5-flash | 0.88 | 0.82 | 0.33 | 3.2 s | $2.98 | 0% |
+| gemini-3.1-pro-preview | 0.71 | 0.69 | 0.34 | 11.0 s | $49.76 | 0% |
+
+### Faithfulness & citations (Phase 2, live)
+
+Every cell fetched its cited source pages and scored faithfulness (claims checked
+against the fetched text) and ALCE-style citation precision/recall.
+
+| Model | Faithfulness | Citation precision | Citation recall | Citation F1 |
+| --- | --- | --- | --- | --- |
+| **gemini-3.1-flash-lite** | **0.92** | **0.97** | 0.31 | 0.47 |
+| gemini-3.5-flash | 0.84 | 0.87 | 0.35 | 0.50 |
+| gemini-3.1-pro-preview | 0.78 | 0.86 | 0.38 | 0.53 |
+
+Faithfulness is high across the board (answers' claims are well grounded in the
+fetched sources) and citation precision is high, but citation **recall** is low for
+all three models — they state many source-supported facts without attaching a
+citation to each. That's a real, consistent finding, not noise.
 
 ### What we concluded, and why
 
-**The default is `gemini-3.1-flash-lite`.** It ties Flash on relevance and
-correctness, beats it on source quality, runs faster, and costs roughly **7.5×
-less**. The reason this isn't paradoxical: for grounded search, answer quality comes
-mostly from Google Search results, not from the model's raw reasoning power — so the
-biggest model mostly adds latency and cost.
+**The default is `gemini-3.1-flash-lite`.** It leads on relevance and source
+quality, ties or beats Flash on correctness and faithfulness, runs fastest, and
+costs the least by a wide margin (Pro-preview is ~70× its cost per 1k queries at
+these settings). The reason this isn't paradoxical: for grounded search, answer
+quality comes mostly from Google Search results, not from the model's raw reasoning
+power — so the biggest model mostly adds latency and cost.
 
 **Pro did worst, and we're not over-reading it.** `gemini-3.1-pro-preview` scored
-lowest and took ~20 s/query. The likely cause is our config: we disable "thinking"
-(`ThinkingBudget=0`) for speed, and the preview Pro reasoning model seems to
-interact badly with that (the 20 s latency suggests thinking wasn't actually
-suppressed). The honest takeaway isn't "Pro is bad" — it's "Pro is the wrong tier
-for fast grounded search, at least with this configuration."
+lowest on the quality dimensions and took ~11 s/query. The likely cause is our
+config: we disable "thinking" (`ThinkingBudget=0`) for speed, and the preview Pro
+reasoning model seems to interact badly with that. The honest takeaway isn't "Pro is
+bad" — it's "Pro is the wrong tier for fast grounded search, at least with this
+configuration."
 
-**A real limitation worth seeing:** source quality is low on `factual` (0.27) and
-`how-to` (0.05) cases. Gemini often answers easy questions from its own knowledge
-*without* searching, returning zero sources. That's fine for how-to, more concerning
-for factual lookups — and a good argument for the planned faithfulness work.
+**Where the sample is honest about its limits:** source quality is weakest on
+`how-to` (0.18) and `ambiguous` (0.26) cases. Gemini often answers easy or opinion
+questions from its own knowledge *without* searching, returning zero sources — fine
+for a how-to, more of a gap for anything that should be grounded. The ambiguous
+cases also expose a real behavior: on bare terms like "python" or "jaguar" the model
+sometimes commits to one meaning instead of flagging the ambiguity.
 
 ## Run it yourself
 
@@ -153,29 +174,37 @@ per-claim verdicts and per-sentence labels for inspection.
 
 ### Judge validation with Cohen's κ
 
-An LLM judge is only trustworthy once it agrees with humans. The workflow:
+An LLM judge is only trustworthy once it agrees with humans. We validate the judge
+against a human reference label set for one model's answers
+([`labels/flash-lite.yaml`](labels/flash-lite.yaml)), which rates every
+`gemini-3.1-flash-lite` cell in the committed run on `relevance` / `correctness` /
+`source_quality`, bucketed `low`/`med`/`high`. The file header documents exactly how
+the labels were produced (the rubric, and the human sign-off that makes them the
+reference). The judge's `[0,1]` scores are bucketed the same way and paired with the
+human labels to compute Cohen's κ per dimension:
 
-1. Run an eval and keep the results JSON (written to `--out`).
-2. Hand-score the same cases on each dimension, bucketed `low`/`med`/`high`, in a
-   labels YAML (`evals/labels/example.yaml` documents the format).
-3. Compute Cohen's κ per dimension — the judge's `[0,1]` scores are bucketed the
-   same way and paired with your labels:
+```bash
+go run ./cmd/eval --kappa evals/labels/flash-lite.yaml \
+  --results evals/results/2026-07-12T23:22:55Z.json --kappa-model gemini-3.1-flash-lite
+```
 
-   ```bash
-   go run ./cmd/eval --kappa evals/labels/your-labels.yaml \
-     --results eval-results/<timestamp>.json --kappa-model gemini-3.1-flash-lite
-   ```
+This is offline (no API calls). For the committed run (n=24 per dimension):
 
-   This is offline (no API calls); it prints κ and the paired-sample count per
-   dimension.
-4. Trust the judge on a dimension only once **κ > 0.6**. Re-check whenever the
-   judge model version changes (calibration drift).
+| Dimension | Cohen's κ | Reading |
+| --- | --- | --- |
+| relevance | **1.00** | perfect agreement |
+| source_quality | **0.87** | strong agreement |
+| correctness | **0.63** | moderate-to-strong — clears our 0.6 trust bar |
 
-`evals/labels/example.yaml` ships with **clearly-marked placeholder rows** so the
-format and loader are exercised — those rows are fake and must be replaced with
-real human judgments before any κ number means anything.
+All three dimensions clear the **κ > 0.6** bar and can be trusted. The residual
+correctness disagreements are substantive, not random: the judge is more lenient on
+a possibly-stale version string, and stricter on an answer that padded a correct fact
+with extra claims. The practical
+consequence: **gate regressions on all three κ-validated dimensions**. Re-check κ
+whenever the judge model version changes (calibration drift).
 
-Labels format:
+To validate another model or grow the label set, add a `labels/<model>.yaml` in the
+same format:
 
 ```yaml
 - case_id: go-latest-version   # must match an id in dataset/cases.yaml
@@ -200,8 +229,11 @@ go run ./cmd/eval --phase2 --baseline evals/baseline.json --threshold 0.05
 ```
 
 A model present in the baseline but missing from the run (e.g. it errored out
-entirely) is also flagged. Per the design, only enable gating once the judge is
-κ-validated — otherwise you're gating on noise.
+entirely) is also flagged. Per the design, gate only on κ-validated dimensions —
+here that means **all three dimensions** clear **κ > 0.6** (relevance 1.00,
+source_quality 0.87, correctness 0.63), so all are trustworthy enough to gate on.
+A committed baseline generated from the current run lives at
+[`baseline.json`](baseline.json).
 
 ## Add your own cases
 

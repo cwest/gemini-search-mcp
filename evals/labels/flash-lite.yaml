@@ -1,0 +1,200 @@
+# gemini-search-mcp — human reference labels (flash-lite answer set)
+#
+# Reference ("human-standard") ratings for judge validation via Cohen's kappa.
+# Each row rates one case's gemini-3.1-flash-lite answer on the dimensions the
+# judge scores, bucketed low | med | high (same thirds the judge's [0,1] scores
+# are bucketed into by BucketScore: <1/3 low, <2/3 med, else high).
+#
+# HOW THESE LABELS WERE PRODUCED
+# ------------------------------
+# 1. Answer set: the committed run evals/results/2026-07-12T23:22:55Z.json, which
+#    persists the exact answer + cited sources each cell's judge scored. Labels
+#    are drawn against that same material (model gemini-3.1-flash-lite, 24 cases).
+# 2. Drafting: an agent drafted these ratings by reading each answer, its cited
+#    sources, and the case's expect_assertions, then applying the rubric below —
+#    WITHOUT looking at the judge's numeric scores (so the labels are an
+#    independent reference, not a copy of the judge's verdict).
+# 3. Human sign-off: these drafts are reviewed and approved by a human (Casey);
+#    that approval is what makes them the human reference standard. Adjust any
+#    cell during review — the committed file is the approved version.
+#
+# RUBRIC (bucket definitions)
+# ---------------------------
+# relevance:
+#   high — directly answers the query; padding, if any, still serves the query.
+#   med  — answers a plausible reading but drifts, over-pads, or only partly
+#          engages the actual question.
+#   low  — does not address what was asked.
+# correctness (judged against expect_assertions):
+#   high — satisfies all expected assertions; nothing materially wrong.
+#   med  — satisfies the gist but has a notable error or misses part.
+#   low  — fails an expected assertion (wrong fact, or — for ambiguous cases —
+#          silently commits to one meaning; or — for no-good-answer cases —
+#          fabricates rather than refusing).
+# source_quality:
+#   high — sources present, on-topic, and reputable for the claim.
+#   med  — sources present but weak, mixed, or only partially authoritative.
+#   low  — no sources returned, or the sources are off-topic / low-quality.
+#
+# NOTES ON SPECIFIC RULINGS (the interesting ones)
+# ------------------------------------------------
+# - jaguar-ambiguous / python-versus-snake: correctness=low. Both answers are
+#   well-written but describe ONLY one meaning (the animal; the language) and
+#   never acknowledge the ambiguity the case requires — a real failure of the
+#   ambiguous category, not a knowledge error.
+# - moon-landing-then-age: correctness=high. Apollo 11 / 1969 is right, and the
+#   elapsed-years answer ("56 years ago" as of 2026-07-12) is a defensible reading
+#   of the ambiguous "how many years ago": plain subtraction gives 57 (numeral
+#   count) but completed calendar anniversaries give 56 (the July-20 anniversary
+#   has not yet occurred as of the run date). The model chose the stricter
+#   completed-years interpretation and showed date-anchored reasoning, satisfying
+#   both assertions — not a math error.
+# - no-source cells (git-undo, best-language, tar-extract, best-database,
+#   fake-treaty, nonexistent-city, python-versus-snake): source_quality=low
+#   because the model answered from its own knowledge and returned zero sources.
+# - unicorn-population: source_quality=med — sources present but mostly
+#   merchandise/blog pages, only weakly authoritative.
+
+- case_id: speed-of-light
+  scores:
+    relevance: high
+    correctness: high
+    source_quality: high
+
+- case_id: tallest-mountain
+  scores:
+    relevance: high
+    correctness: high
+    source_quality: high
+
+- case_id: go-latest-version
+  scores:
+    relevance: high
+    correctness: high
+    source_quality: med
+
+- case_id: us-president-current
+  scores:
+    relevance: high
+    correctness: high
+    source_quality: high
+
+- case_id: python-virtualenv
+  scores:
+    relevance: high
+    correctness: high
+    source_quality: med
+
+- case_id: git-undo-last-commit
+  scores:
+    relevance: high
+    correctness: high
+    source_quality: low
+
+- case_id: einstein-nobel-topic
+  scores:
+    relevance: high
+    correctness: high
+    source_quality: high
+
+- case_id: ceo-then-hometown
+  scores:
+    relevance: high
+    correctness: high
+    source_quality: high
+
+- case_id: jaguar-ambiguous
+  scores:
+    relevance: med
+    correctness: low
+    source_quality: med
+
+- case_id: best-language
+  scores:
+    relevance: high
+    correctness: high
+    source_quality: low
+
+- case_id: nonexistent-city
+  scores:
+    relevance: high
+    correctness: high
+    source_quality: low
+
+- case_id: fake-study-citation
+  scores:
+    relevance: high
+    correctness: high
+    source_quality: med
+
+- case_id: boiling-point-water
+  scores:
+    relevance: high
+    correctness: high
+    source_quality: high
+
+- case_id: largest-ocean
+  scores:
+    relevance: high
+    correctness: high
+    source_quality: high
+
+- case_id: python-latest-version
+  scores:
+    relevance: high
+    correctness: high
+    source_quality: high
+
+- case_id: uk-prime-minister
+  scores:
+    relevance: high
+    correctness: high
+    source_quality: med
+
+- case_id: tar-extract
+  scores:
+    relevance: high
+    correctness: high
+    source_quality: low
+
+- case_id: find-large-files
+  scores:
+    relevance: high
+    correctness: high
+    source_quality: high
+
+- case_id: moon-landing-then-age
+  scores:
+    relevance: high
+    correctness: high
+    source_quality: high
+
+- case_id: telephone-inventor-country
+  scores:
+    relevance: high
+    correctness: high
+    source_quality: high
+
+- case_id: python-versus-snake
+  scores:
+    relevance: med
+    correctness: low
+    source_quality: low
+
+- case_id: best-database
+  scores:
+    relevance: high
+    correctness: high
+    source_quality: low
+
+- case_id: unicorn-population
+  scores:
+    relevance: high
+    correctness: high
+    source_quality: med
+
+- case_id: fake-treaty
+  scores:
+    relevance: high
+    correctness: high
+    source_quality: low
