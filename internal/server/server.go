@@ -49,6 +49,15 @@ func New(s search.Searcher) *mcp.Server {
 				Content: []mcp.Content{&mcp.TextContent{Text: fmt.Sprintf("search failed: %v", err)}},
 			}, searchOut{}, nil
 		}
+		// The dual return is deliberate and spec-compliant, not redundant. The
+		// go-sdk typed-tool signature emits BOTH representations: the searchOut
+		// struct becomes structuredContent (with an auto-generated outputSchema)
+		// for machine consumption, and search.Format(r) is the TextContent block.
+		// The MCP spec says a tool returning structuredContent SHOULD also include
+		// a serialized form in content for clients that don't parse structured
+		// output. Do not "simplify" this to a single return — dropping the text
+		// block breaks backwards compatibility; dropping the struct loses the
+		// schema-validated machine path.
 		return &mcp.CallToolResult{
 			Content: []mcp.Content{&mcp.TextContent{Text: search.Format(r)}},
 		}, searchOut{Answer: r.Answer, Sources: r.Sources, Queries: r.Queries}, nil
