@@ -122,6 +122,33 @@ export GEMINI_GROUNDING_MODE=enterprise
 For the product details, data-handling guarantees, and availability, see
 [Web Grounding for Enterprise](https://cloud.google.com/vertex-ai/generative-ai/docs/grounding/web-grounding-enterprise?utm_campaign=CDR_0x5d16fa53_user-journey_b532564980&utm_medium=external&utm_source=blog).
 
+### Enabling enterprise grounding
+
+Web Grounding for Enterprise needs a Vertex AI project set up for it:
+
+- **APIs enabled** on the project: **Vertex AI API** and the **Discovery Engine
+  API** (the enterprise index is served through Discovery Engine).
+- **A region with Gemini quota.** In testing, the `global` location was
+  quota-dry (429 `RESOURCE_EXHAUSTED`); `us-central1` worked. Set
+  `GOOGLE_CLOUD_LOCATION` to a region that has Gemini quota on your project.
+- **A model served in that region.** `gemini-2.5-flash` is served in
+  `us-central1`; `gemini-3.5-flash` is only served in `global`. Set
+  `GEMINI_SEARCH_MODEL` to a model available in your chosen region.
+
+A working combination for a Vertex project with the APIs above enabled:
+
+```sh
+export GOOGLE_GENAI_USE_VERTEXAI=true
+export GOOGLE_CLOUD_PROJECT=your-project
+export GOOGLE_CLOUD_LOCATION=us-central1
+export GEMINI_SEARCH_MODEL=gemini-2.5-flash
+export GEMINI_GROUNDING_MODE=enterprise
+```
+
+The live integration tests (`RUN_VERTEX_INTEGRATION=1`) default to this same
+region/model combination so they run green out of the box; both env vars
+override the defaults.
+
 ## Which model?
 
 The default is `gemini-3.1-flash-lite`, and that's an evidence-based choice, not a

@@ -23,18 +23,37 @@ import (
 	"github.com/cwest/gemini-search-mcp/internal/config"
 )
 
-// liveModel resolves the model id for a live integration run.
+// liveModel resolves the model id for a live integration run. It defaults to
+// gemini-2.5-flash, which is served in regional Vertex locations such as
+// us-central1. Note that gemini-3.5-flash is only served in the `global`
+// location, and `global` may be quota-dry on a given project, so it is a poor
+// out-of-the-box default. Override with GEMINI_SEARCH_MODEL.
 func liveModel() string {
 	if m := os.Getenv("GEMINI_SEARCH_MODEL"); m != "" {
 		return m
 	}
-	return "gemini-3.5-flash"
+	return "gemini-2.5-flash"
+}
+
+// ensureLiveLocation makes the live test runnable out-of-the-box by defaulting
+// GOOGLE_CLOUD_LOCATION to us-central1 when it is unset. The genai SDK reads
+// this env var directly to pick the Vertex region. `global` was observed to be
+// quota-dry for Gemini on some projects (429 RESOURCE_EXHAUSTED), and the
+// default model above is region-served, so us-central1 is the safe default.
+// An explicit GOOGLE_CLOUD_LOCATION always wins. t.Setenv restores the prior
+// value at the end of the test.
+func ensureLiveLocation(t *testing.T) {
+	t.Helper()
+	if os.Getenv("GOOGLE_CLOUD_LOCATION") == "" {
+		t.Setenv("GOOGLE_CLOUD_LOCATION", "us-central1")
+	}
 }
 
 // runLiveSearch performs one real grounded search in the given mode and asserts
 // a non-empty answer with at least one grounding source came back.
 func runLiveSearch(t *testing.T, mode config.GroundingMode) {
 	t.Helper()
+	ensureLiveLocation(t)
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
@@ -58,6 +77,13 @@ func runLiveSearch(t *testing.T, mode config.GroundingMode) {
 // TestSearchLive hits the real Gemini grounding API using the default
 // google_search tool. Skipped unless RUN_VERTEX_INTEGRATION=1 and the GOOGLE_*
 // env is configured (e.g. Vertex ADC).
+//
+// It runs green out of the box against a Vertex project with Gemini quota:
+// GOOGLE_CLOUD_LOCATION defaults to us-central1 (see ensureLiveLocation) and
+// GEMINI_SEARCH_MODEL defaults to gemini-2.5-flash (see liveModel), a
+// region-served combination. Override either env var to test a different
+// region/model. Avoid GOOGLE_CLOUD_LOCATION=global, which was observed to be
+// quota-dry on some projects.
 func TestSearchLive(t *testing.T) {
 	if os.Getenv("RUN_VERTEX_INTEGRATION") != "1" {
 		t.Skip("set RUN_VERTEX_INTEGRATION=1 to run the live Vertex test")
