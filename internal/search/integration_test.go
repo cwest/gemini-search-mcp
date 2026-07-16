@@ -24,10 +24,12 @@ import (
 )
 
 // liveModel resolves the model id for a live integration run. It defaults to
-// gemini-2.5-flash, which is served in regional Vertex locations such as
-// us-central1. Note that gemini-3.5-flash is only served in the `global`
-// location, and `global` may be quota-dry on a given project, so it is a poor
-// out-of-the-box default. Override with GEMINI_SEARCH_MODEL.
+// gemini-2.5-flash, which in our testing was served on the regional Vertex
+// location us-central1. Model/region availability varies (both 2.5-flash and
+// 3.5-flash are generally available across regional and global endpoints;
+// preview models tend to require global) and a given location may be quota-dry
+// on a given project, so consult the Vertex AI locations documentation and
+// override with GEMINI_SEARCH_MODEL as needed.
 func liveModel() string {
 	if m := os.Getenv("GEMINI_SEARCH_MODEL"); m != "" {
 		return m

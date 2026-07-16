@@ -131,9 +131,13 @@ Web Grounding for Enterprise needs a Vertex AI project set up for it:
 - **A region with Gemini quota.** In testing, the `global` location was
   quota-dry (429 `RESOURCE_EXHAUSTED`); `us-central1` worked. Set
   `GOOGLE_CLOUD_LOCATION` to a region that has Gemini quota on your project.
-- **A model served in that region.** `gemini-2.5-flash` is served in
-  `us-central1`; `gemini-3.5-flash` is only served in `global`. Set
-  `GEMINI_SEARCH_MODEL` to a model available in your chosen region.
+- **A model served in that region.** Both `gemini-2.5-flash` and
+  `gemini-3.5-flash` are generally available across regional and `global`
+  endpoints; preview models tend to require `global`. Availability varies by
+  model and region, so consult the canonical
+  [Vertex AI locations documentation](https://cloud.google.com/vertex-ai/generative-ai/docs/learn/locations)
+  rather than assuming, and set `GEMINI_SEARCH_MODEL` to a model available in
+  your chosen region. In our testing, `gemini-2.5-flash` on `us-central1` worked.
 
 A working combination for a Vertex project with the APIs above enabled:
 
