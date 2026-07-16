@@ -135,7 +135,7 @@ Web Grounding for Enterprise needs a Vertex AI project set up for it:
   `gemini-3.5-flash` are generally available across regional and `global`
   endpoints; preview models tend to require `global`. Availability varies by
   model and region, so consult the canonical
-  [Vertex AI locations documentation](https://cloud.google.com/vertex-ai/generative-ai/docs/learn/locations)
+  [Vertex AI locations documentation](https://cloud.google.com/vertex-ai/generative-ai/docs/learn/locations?utm_campaign=CDR_0x5d16fa53_user-journey_b532564980&utm_medium=external&utm_source=blog)
   rather than assuming, and set `GEMINI_SEARCH_MODEL` to a model available in
   your chosen region. In our testing, `gemini-2.5-flash` on `us-central1` worked.
 
