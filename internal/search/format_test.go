@@ -14,7 +14,10 @@
 
 package search
 
-import "testing"
+import (
+	"strings"
+	"testing"
+)
 
 func TestFormat(t *testing.T) {
 	r := &Result{
@@ -32,6 +35,56 @@ func TestFormat(t *testing.T) {
 		"\nSearches run: latest Go version\n"
 	if got := Format(r); got != want {
 		t.Errorf("Format mismatch:\n got: %q\nwant: %q", got, want)
+	}
+}
+
+// TestFormatSourceLabel pins the source-label rendering across the two grounding
+// provider shapes. AI Studio returns a distinct human Title with an empty Domain;
+// the Vertex enterprise path returns the site domain in BOTH Title and Domain
+// (and sometimes only a Domain). The label must never render a redundant
+// "domain — domain" for the enterprise shape — that was the AI-Studio↔enterprise
+// parity gap this covers.
+func TestFormatSourceLabel(t *testing.T) {
+	tests := []struct {
+		name   string
+		source Source
+		want   string // the "N. <label>" line content, without the numbering prefix
+	}{
+		{
+			name:   "ai studio: distinct title, empty domain",
+			source: Source{Title: "Go Downloads", Domain: "", URI: "https://x/a"},
+			want:   "Go Downloads",
+		},
+		{
+			name:   "ai studio: title and domain distinct",
+			source: Source{Title: "Go Downloads", Domain: "go.dev", URI: "https://x/a"},
+			want:   "go.dev — Go Downloads",
+		},
+		{
+			name:   "enterprise: title equals domain (no redundant dupe)",
+			source: Source{Title: "youtube.com", Domain: "youtube.com", URI: "https://x/a"},
+			want:   "youtube.com",
+		},
+		{
+			name:   "enterprise: domain only, empty title",
+			source: Source{Title: "", Domain: "f1miamigp.com", URI: "https://x/a"},
+			want:   "f1miamigp.com",
+		},
+		{
+			name:   "fallback: both empty renders the uri",
+			source: Source{Title: "", Domain: "", URI: "https://x/a"},
+			want:   "https://x/a",
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			r := &Result{Answer: "a", Sources: []Source{tt.source}}
+			got := Format(r)
+			wantLine := "1. " + tt.want + "\n"
+			if !strings.Contains(got, wantLine) {
+				t.Errorf("Format label:\n got: %q\nwant substring: %q", got, wantLine)
+			}
+		})
 	}
 }
 

@@ -29,14 +29,30 @@ func Format(r *Result) string {
 	}
 	b.WriteString("\n\nSources:\n")
 	for i, s := range r.Sources {
-		label := s.Title
-		if s.Domain != "" {
-			label = s.Domain + " — " + s.Title
-		}
-		fmt.Fprintf(&b, "%d. %s\n   %s\n", i+1, label, s.URI)
+		fmt.Fprintf(&b, "%d. %s\n   %s\n", i+1, sourceLabel(s), s.URI)
 	}
 	if len(r.Queries) > 0 {
 		fmt.Fprintf(&b, "\nSearches run: %s\n", strings.Join(r.Queries, ", "))
 	}
 	return b.String()
+}
+
+// sourceLabel renders the human-facing label for a cited source, normalizing the
+// two grounding provider shapes. AI Studio returns a distinct page Title with an
+// empty Domain ("Go Downloads"); the Vertex enterprise path returns the site
+// domain in both Title and Domain ("youtube.com" / "youtube.com") or only a
+// Domain. The label prefixes the domain only when it adds information beyond the
+// title, so the enterprise shape never renders a redundant "domain — domain" or a
+// dangling "domain — ". Falls back to the URI when neither field is present.
+func sourceLabel(s Source) string {
+	switch {
+	case s.Title == "" && s.Domain == "":
+		return s.URI
+	case s.Title == "":
+		return s.Domain
+	case s.Domain == "" || s.Domain == s.Title:
+		return s.Title
+	default:
+		return s.Domain + " — " + s.Title
+	}
 }

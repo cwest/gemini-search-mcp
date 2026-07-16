@@ -68,4 +68,22 @@ func TestServerWebSearch(t *testing.T) {
 	if !strings.Contains(text, "stub answer for: hello") {
 		t.Errorf("unexpected tool text: %q", text)
 	}
+	// The dual return is spec-mandated: the same grounding metadata that appears
+	// in the Markdown content must also survive into structuredContent so machine
+	// callers get the schema-validated path. Assert the citation reached it.
+	sc, ok := res.StructuredContent.(map[string]any)
+	if !ok {
+		t.Fatalf("StructuredContent = %T, want map[string]any", res.StructuredContent)
+	}
+	if got, _ := sc["answer"].(string); got != "stub answer for: hello" {
+		t.Errorf("structuredContent answer = %q", got)
+	}
+	sources, ok := sc["sources"].([]any)
+	if !ok || len(sources) == 0 {
+		t.Fatalf("structuredContent sources = %v, want at least one cited source", sc["sources"])
+	}
+	src0, _ := sources[0].(map[string]any)
+	if src0["uri"] != "https://example.com" || src0["domain"] != "example.com" {
+		t.Errorf("structuredContent sources[0] = %v, want citation uri+domain preserved", src0)
+	}
 }
