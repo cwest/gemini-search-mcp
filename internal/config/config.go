@@ -29,11 +29,25 @@ const (
 	defaultTimeout = 30 * time.Second
 )
 
+// GroundingMode selects which grounding tool the server wires into each search.
+type GroundingMode string
+
+const (
+	// GroundingGoogleSearch is the default: the standard google_search tool,
+	// available on both AI Studio and Vertex AI.
+	GroundingGoogleSearch GroundingMode = "google_search"
+	// GroundingEnterprise is Web Grounding for Enterprise (the
+	// enterpriseWebSearch tool). It requires the Vertex AI provider and is not
+	// available on the AI Studio API-key path.
+	GroundingEnterprise GroundingMode = "enterprise"
+)
+
 // Config is the validated runtime configuration.
 type Config struct {
-	Provider string        // "vertex" or "aistudio"
-	Model    string        // Gemini model id
-	Timeout  time.Duration // per-search timeout
+	Provider      string        // "vertex" or "aistudio"
+	Model         string        // Gemini model id
+	Timeout       time.Duration // per-search timeout
+	GroundingMode GroundingMode // which grounding tool to use
 }
 
 // Load reads the environment and returns a validated Config.
@@ -59,6 +73,19 @@ func Load() (*Config, error) {
 			return nil, fmt.Errorf("invalid GEMINI_SEARCH_TIMEOUT %q: %w", t, err)
 		}
 		c.Timeout = d
+	}
+
+	c.GroundingMode = GroundingGoogleSearch
+	switch mode := os.Getenv("GEMINI_GROUNDING_MODE"); mode {
+	case "", string(GroundingGoogleSearch):
+		c.GroundingMode = GroundingGoogleSearch
+	case string(GroundingEnterprise):
+		if c.Provider != "vertex" {
+			return nil, fmt.Errorf("GEMINI_GROUNDING_MODE=enterprise requires the Vertex AI provider (Web Grounding for Enterprise is not available on the AI Studio API-key path): set GOOGLE_GENAI_USE_VERTEXAI=true with GOOGLE_CLOUD_PROJECT and GOOGLE_CLOUD_LOCATION")
+		}
+		c.GroundingMode = GroundingEnterprise
+	default:
+		return nil, fmt.Errorf("invalid GEMINI_GROUNDING_MODE %q: want %q or %q", mode, GroundingGoogleSearch, GroundingEnterprise)
 	}
 	return c, nil
 }

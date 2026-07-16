@@ -43,10 +43,10 @@ func main() {
 	if err != nil {
 		log.Fatalf("config: %v", err)
 	}
-	log.Printf("gemini-search-mcp %s: provider=%s model=%s", version.Version, cfg.Provider, cfg.Model)
+	log.Printf("gemini-search-mcp %s: provider=%s model=%s grounding=%s", version.Version, cfg.Provider, cfg.Model, cfg.GroundingMode)
 
 	ctx := context.Background()
-	sc, err := search.New(ctx, cfg.Model)
+	sc, err := search.New(ctx, cfg.Model, cfg.GroundingMode)
 	if err != nil {
 		log.Fatalf("init search: %v", err)
 	}
