@@ -77,6 +77,58 @@ One caveat worth knowing: on Vertex AI the source list includes the domain for
 each citation. On AI Studio that field comes back empty, so you'll see the page
 title and URL but not a bare domain.
 
+## Enterprise (Vertex AI)
+
+Vertex AI is the enterprise path: the same `web_search` tool, but the model runs
+inside your Google Cloud project instead of behind a personal API key. Grounding
+still happens through [Google Search on Vertex AI](https://cloud.google.com/vertex-ai/generative-ai/docs/grounding/overview?utm_campaign=CDR_0x5d16fa53_user-journey_b532564980&utm_medium=external&utm_source=blog);
+what changes is who owns the request and how it's governed.
+
+### How the server picks a path
+
+The server auto-detects the provider at startup and never mixes the two. It
+checks for Vertex first, then falls back to AI Studio:
+
+```mermaid
+flowchart TD
+    A[Startup] --> B{GOOGLE_GENAI_USE_VERTEXAI truthy?}
+    B -->|yes| V[Vertex AI]
+    B -->|no| C{GOOGLE_CLOUD_PROJECT and GOOGLE_CLOUD_LOCATION both set?}
+    C -->|yes| V
+    C -->|no| D{GOOGLE_API_KEY or GEMINI_API_KEY set?}
+    D -->|yes| S[AI Studio]
+    D -->|no| E[Exit with a config error]
+```
+
+So there are two ways to land on Vertex: set `GOOGLE_GENAI_USE_VERTEXAI=true`
+explicitly, or just set `GOOGLE_CLOUD_PROJECT` and `GOOGLE_CLOUD_LOCATION`
+together — either one selects it. A truthy flag is any of `1`, `true`, `TRUE`,
+`True`, `yes`, or `on`. The full variable list is in
+[Configuration → Vertex AI](#vertex-ai); authenticate with
+[Application Default Credentials](https://cloud.google.com/docs/authentication/application-default-credentials?utm_campaign=CDR_0x5d16fa53_user-journey_b532564980&utm_medium=external&utm_source=blog)
+or a service-account key, and choose a `GOOGLE_CLOUD_LOCATION` from the
+[supported Vertex locations](https://cloud.google.com/vertex-ai/generative-ai/docs/learn/locations?utm_campaign=CDR_0x5d16fa53_user-journey_b532564980&utm_medium=external&utm_source=blog).
+
+### Why and when to use it
+
+Reach for the enterprise path when the answer to "who is accountable for this
+model call?" needs to be an organization, not an individual:
+
+- **Governance at the model layer.** Requests run under a Google Cloud project,
+  so your org's IAM, org policies, audit logging, and VPC controls apply to the
+  search calls — the same controls the rest of your
+  [Vertex AI](https://cloud.google.com/vertex-ai/generative-ai/docs/overview?utm_campaign=CDR_0x5d16fa53_user-journey_b532564980&utm_medium=external&utm_source=blog)
+  workloads live under.
+- **Project-scoped billing and policy.** Usage bills to the project and is
+  subject to its quotas and policies, instead of a personal key's billing.
+- **Fuller citations.** On Vertex the per-source domain field is populated, so
+  each citation carries its domain — useful when you want to filter or attribute
+  sources by host (see the caveat above).
+
+AI Studio stays the quick path for a single developer with an API key. Vertex is
+the path for a team that needs the search calls to sit inside its cloud
+governance.
+
 ## Which model?
 
 The default is `gemini-3.1-flash-lite`, and that's an evidence-based choice, not a
