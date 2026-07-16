@@ -8,19 +8,22 @@ searching and the reading; you get the answer and the links.
 
 It talks to Gemini one of two ways: through Vertex AI (your Google Cloud
 project) or through AI Studio (an API key). Pick whichever you already have.
+On Vertex AI it can also use **Web Grounding for Enterprise**, Google's
+compliance-grade grounding tool — see [Grounding modes](#grounding-modes).
 
 ## How it works
 
 ```mermaid
 flowchart LR
     A[MCP client] -->|web_search query| B[gemini-search-mcp]
-    B -->|GenerateContent + GoogleSearch| C[Gemini]
+    B -->|GenerateContent + grounding tool| C[Gemini]
     C -->|grounded answer + citations| B
     B -->|answer + sources| A
 ```
 
 The server speaks MCP over stdio, so any MCP client can launch it as a
-subprocess and call the tool.
+subprocess and call the tool. Which grounding tool it hands to Gemini depends
+on the [grounding mode](#grounding-modes).
 
 ## Install
 
@@ -72,10 +75,52 @@ The quick path. Get a key from [AI Studio](https://aistudio.google.com/apikey).
 | --- | --- | --- |
 | `GEMINI_SEARCH_MODEL` | `gemini-3.1-flash-lite` | The Gemini model to query. See [Which model?](#which-model) for why this is the default. |
 | `GEMINI_SEARCH_TIMEOUT` | `30s` | Per-search deadline, as a Go duration (`45s`, `2m`). |
+| `GEMINI_GROUNDING_MODE` | `google_search` | Which grounding tool to use: `google_search` (default) or `enterprise`. `enterprise` requires Vertex AI. See [Grounding modes](#grounding-modes). |
 
 One caveat worth knowing: on Vertex AI the source list includes the domain for
 each citation. On AI Studio that field comes back empty, so you'll see the page
 title and URL but not a bare domain.
+
+## Grounding modes
+
+Grounding is *how* the model backs its answer with real web sources. This server
+supports three distinct paths, selected by your provider and the
+`GEMINI_GROUNDING_MODE` variable. The default is unchanged from earlier
+versions: `google_search` on whichever provider you configured.
+
+```mermaid
+flowchart TD
+    Start[web_search] --> Mode{GEMINI_GROUNDING_MODE}
+    Mode -->|google_search default| GS[google_search tool]
+    Mode -->|enterprise| ENT[enterpriseWebSearch tool]
+    GS --> AIS[AI Studio - API key]
+    GS --> VTX[Vertex AI - project + ADC]
+    ENT --> VTXE[Vertex AI only - required]
+```
+
+| Path | Provider | `GEMINI_GROUNDING_MODE` | What it is |
+| --- | --- | --- | --- |
+| AI Studio + Google Search | AI Studio (API key) | `google_search` | Grounding with Google Search, reached via an AI Studio API key. The quick path. |
+| Vertex + Google Search | Vertex AI | `google_search` | The same Grounding with Google Search tool, reached through your Google Cloud project. |
+| Vertex + Web Grounding for Enterprise | Vertex AI | `enterprise` | The `enterpriseWebSearch` tool: a compliance-grade grounding product with **no logging of your prompts or responses for product improvement, VPC Service Controls support, and a curated web index**. |
+
+**These are three different things, and the distinction is real.** Reaching
+Grounding with Google Search over a Vertex API path is *not* the same as Web
+Grounding for Enterprise — "Vertex" alone does not make grounding "enterprise."
+Enterprise grounding is a separate tool (`enterpriseWebSearch`) with different
+data-handling guarantees, and it is available **only on Vertex AI**. Selecting
+`GEMINI_GROUNDING_MODE=enterprise` without the Vertex provider fails fast at
+startup with a message telling you what's required.
+
+To use it, configure Vertex AI (see [Vertex AI](#vertex-ai) above — same
+credentials, no new secrets) and set:
+
+```sh
+export GEMINI_GROUNDING_MODE=enterprise
+```
+
+For the product details, data-handling guarantees, and availability, see
+[Web Grounding for Enterprise](https://cloud.google.com/vertex-ai/generative-ai/docs/grounding/web-grounding-enterprise?utm_campaign=CDR_0x5d16fa53_user-journey_b532564980&utm_medium=external&utm_source=blog).
 
 ## Which model?
 
@@ -193,6 +238,8 @@ steering other agents (Gemini CLI, opencode, OpenAI-compatible clients), see
 
 - [Grounding with Google Search](https://ai.google.dev/gemini-api/docs/google-search?utm_campaign=CDR_0x5d16fa53_awareness_b532564501&utm_medium=external&utm_source=lab)
   — the Gemini API feature this server is built on.
+- [Web Grounding for Enterprise](https://cloud.google.com/vertex-ai/generative-ai/docs/grounding/web-grounding-enterprise?utm_campaign=CDR_0x5d16fa53_user-journey_b532564980&utm_medium=external&utm_source=blog)
+  — the compliance-grade grounding tool behind `GEMINI_GROUNDING_MODE=enterprise`.
 - This project has a companion write-up series:
   <!-- SERIES-SLUG-PLACEHOLDER: fill with the live slug when Part 1 publishes; a backlink to an unpublished post would 404. -->
   <https://caseywest.com/SERIES-SLUG-PLACEHOLDER>

@@ -24,6 +24,8 @@ import (
 
 	"github.com/cenkalti/backoff/v5"
 	"google.golang.org/genai"
+
+	"github.com/cwest/gemini-search-mcp/internal/config"
 )
 
 // defaultMaxTries bounds retry attempts for a single search. Four tries with
@@ -73,6 +75,8 @@ type Client struct {
 	genai *genai.Client
 	model string
 
+	// groundingMode selects which grounding tool is wired into each search.
+	groundingMode config.GroundingMode
 	// generate performs the underlying GenerateContent call. Defaults to the
 	// real genai call; overridden in tests.
 	generate generateFunc
@@ -84,19 +88,32 @@ type Client struct {
 }
 
 // New builds a Client. Backend/project/location/credentials are auto-detected
-// from the standard GOOGLE_* environment variables by the genai SDK.
-func New(ctx context.Context, model string) (*Client, error) {
+// from the standard GOOGLE_* environment variables by the genai SDK. mode
+// selects the grounding tool (google_search by default, or Web Grounding for
+// Enterprise); an empty mode falls back to google_search.
+func New(ctx context.Context, model string, mode config.GroundingMode) (*Client, error) {
 	c, err := genai.NewClient(ctx, nil)
 	if err != nil {
 		return nil, fmt.Errorf("genai.NewClient: %w", err)
 	}
 	return &Client{
-		genai:      c,
-		model:      model,
-		generate:   c.Models.GenerateContent,
-		newBackOff: func() backoff.BackOff { return backoff.NewExponentialBackOff() },
-		maxTries:   defaultMaxTries,
+		genai:         c,
+		model:         model,
+		groundingMode: mode,
+		generate:      c.Models.GenerateContent,
+		newBackOff:    func() backoff.BackOff { return backoff.NewExponentialBackOff() },
+		maxTries:      defaultMaxTries,
 	}, nil
+}
+
+// groundingTool returns the genai tool selected by the client's grounding mode.
+// Web Grounding for Enterprise uses the enterpriseWebSearch tool; every other
+// mode (including the empty default) uses the standard google_search tool.
+func (c *Client) groundingTool() *genai.Tool {
+	if c.groundingMode == config.GroundingEnterprise {
+		return &genai.Tool{EnterpriseWebSearch: &genai.EnterpriseWebSearch{}}
+	}
+	return &genai.Tool{GoogleSearch: &genai.GoogleSearch{}}
 }
 
 // isRetryable reports whether err is a transient Vertex AI / Gemini error worth
@@ -121,7 +138,7 @@ func isRetryable(err error) bool {
 func (c *Client) Search(ctx context.Context, query string) (*Result, error) {
 	zero := int32(0)
 	cfg := &genai.GenerateContentConfig{
-		Tools:          []*genai.Tool{{GoogleSearch: &genai.GoogleSearch{}}},
+		Tools:          []*genai.Tool{c.groundingTool()},
 		ThinkingConfig: &genai.ThinkingConfig{ThinkingBudget: &zero},
 	}
 

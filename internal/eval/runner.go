@@ -19,6 +19,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/cwest/gemini-search-mcp/internal/config"
 	"github.com/cwest/gemini-search-mcp/internal/search"
 )
 
@@ -40,7 +41,7 @@ type Options struct {
 func Run(ctx context.Context, cases []Case, models []string, judge *Judge, opts Options) []Result {
 	results := make([]Result, 0, len(cases)*len(models))
 	for _, model := range models {
-		client, err := search.New(ctx, model)
+		client, err := search.New(ctx, model, config.GroundingGoogleSearch)
 		if err != nil {
 			// Whole model is unusable; record one error cell per case so the
 			// report still accounts for it, then move on.
