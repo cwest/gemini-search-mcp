@@ -42,10 +42,15 @@ The card offered two mechanisms. release-please is chosen because:
 | `BREAKING CHANGE:` body| major  |
 | `docs:`/`chore:`/etc.  | none   |
 
-Pre-1.0 note: release-please's `bump-minor-pre-major` / `bump-patch-for-minor-pre-major`
-knobs are left at defaults, so on `0.x` a breaking change bumps the minor and a
-`feat:` bumps the patch — the conventional pre-1.0 behavior. Set `bump-minor-pre-major: true`
-later if the repo wants `feat:` → minor while still on `0.x`.
+Pre-1.0 note: release-please's `bump-minor-pre-major` and
+`bump-patch-for-minor-pre-major` knobs are both left at their `false` defaults, so
+on `0.x` the default versioning strategy treats bumps the same as at `1.x`: a
+breaking change bumps the major (`0.2.0` → `1.0.0`) and a `feat:` bumps the minor
+(`0.2.0` → `0.3.0`). This is why the current baseline's next `feat:` cut is
+`v0.3.0`. To soften pre-1.0 bumps, set `bump-minor-pre-major: true` (breaking
+changes bump minor instead of major while on `0.x`) and/or
+`bump-patch-for-minor-pre-major: true` (`feat:` bumps patch instead of minor).
+Neither is set, so the table above applies unchanged pre-1.0.
 
 ## Files
 
