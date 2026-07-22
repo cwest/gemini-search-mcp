@@ -106,7 +106,9 @@ func main() {
 		log.Printf("wrote baseline summary to %s", *writeBaseline)
 	}
 
-	stamp := time.Now().UTC().Format(time.RFC3339)
+	// RFC 3339 contains colons, which are rejected by Go module zips
+	// (breaking `go install`) and are invalid in Windows filenames.
+	stamp := time.Now().UTC().Format("2006-01-02T15-04-05Z")
 	if err := os.MkdirAll(*outDir, 0o755); err != nil {
 		log.Fatalf("create out dir: %v", err)
 	}
