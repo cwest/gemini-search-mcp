@@ -1,7 +1,7 @@
 # Four-model sweep — 3.1-pro-preview + 3.1-flash-lite + 3.6-flash + 3.5-flash-lite (one run)
 
-**Run:** [`results/2026-07-22T16:47:42Z.json`](2026-07-22T16:47:42Z.json) (report:
-[`.md`](2026-07-22T16:47:42Z.md)) — 24 cases × 4 models = 96 cells, **0 errors**.
+**Run:** [`results/2026-07-22T16-47-42Z.json`](2026-07-22T16-47-42Z.json) (report:
+[`.md`](2026-07-22T16-47-42Z.md)) — 24 cases × 4 models = 96 cells, **0 errors**.
 Judged by `claude-opus-4-8` on Vertex, region `global`, project
 `caseywest-model-garden`. Phase 2 (faithfulness + citations) live. Same golden
 dataset (`dataset/cases.yaml`) as every prior run — identical inputs across all
@@ -152,7 +152,7 @@ default, `source_quality` lands at κ=0.590 — marginally *below* the 0.6 bar, 
 source-quality column should be read as directional rather than tightly trusted on
 this run. It clears the bar on the 3.6-flash label set (0.680). (Commands:
 `go run ./cmd/eval --kappa evals/labels/flash-lite.yaml --results
-evals/results/2026-07-22T16:47:42Z.json --kappa-model gemini-3.1-flash-lite` and the
+evals/results/2026-07-22T16-47-42Z.json --kappa-model gemini-3.1-flash-lite` and the
 same with `flash-3.6.yaml` / `--kappa-model gemini-3.6-flash`.)
 
 ## Reading of the four-model comparison

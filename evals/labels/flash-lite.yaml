@@ -7,7 +7,7 @@
 #
 # HOW THESE LABELS WERE PRODUCED
 # ------------------------------
-# 1. Answer set: the committed run evals/results/2026-07-12T23:22:55Z.json, which
+# 1. Answer set: the committed run evals/results/2026-07-12T23-22-55Z.json, which
 #    persists the exact answer + cited sources each cell's judge scored. Labels
 #    are drawn against that same material (model gemini-3.1-flash-lite, 24 cases).
 # 2. Drafting: an agent drafted these ratings by reading each answer, its cited

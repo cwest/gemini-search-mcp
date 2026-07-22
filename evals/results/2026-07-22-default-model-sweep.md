@@ -1,7 +1,7 @@
 # Default-model sweep — gemini-3.6-flash + gemini-3.5-flash-lite vs current default
 
-**Run:** [`results/2026-07-22T03:07:46Z.json`](2026-07-22T03:07:46Z.json) (report:
-[`.md`](2026-07-22T03:07:46Z.md)) — 24 cases × 3 models = 72 cells, **0 errors**.
+**Run:** [`results/2026-07-22T03-07-46Z.json`](2026-07-22T03-07-46Z.json) (report:
+[`.md`](2026-07-22T03-07-46Z.md)) — 24 cases × 3 models = 72 cells, **0 errors**.
 Judged by `claude-opus-4-8` on Vertex, region `global`, project
 `caseywest-model-garden`. Phase 2 (faithfulness + citations) live. Same golden
 dataset (`dataset/cases.yaml`) as every prior run — identical inputs across models.
@@ -113,7 +113,7 @@ low/med/high and paired with the judge's bucketed scores:
 
 All three κ-validated dimensions clear κ > 0.6, so the scores driving the table are
 trustworthy. (Command: `go run ./cmd/eval --kappa evals/labels/flash-3.6.yaml
---results evals/results/2026-07-22T03:07:46Z.json --kappa-model gemini-3.6-flash`.)
+--results evals/results/2026-07-22T03-07-46Z.json --kappa-model gemini-3.6-flash`.)
 
 ## Recommendation
 

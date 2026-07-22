@@ -51,7 +51,7 @@ Latest run re-evaluates the default against the two models that GA'd 2026-07-21
 (`gemini-3.6-flash`, `gemini-3.5-flash-lite`) on the same 24-case dataset. Full
 comparison table, the two vendor claims measured (not assumed), judge κ, and the
 recommendation: **[`results/2026-07-22-default-model-sweep.md`](results/2026-07-22-default-model-sweep.md)**.
-Committed run: [`results/2026-07-22T03:07:46Z.json`](results/2026-07-22T03:07:46Z.json).
+Committed run: [`results/2026-07-22T03-07-46Z.json`](results/2026-07-22T03-07-46Z.json).
 Headline: the data does not support changing the default — faithfulness ties or
 regresses, neither vendor claim reproduced, and the only quality win (3.6-Flash
 citation recall) costs ~5.4× the token spend.
@@ -59,7 +59,7 @@ citation recall) costs ~5.4× the token spend.
 ## Results (2026-07-12)
 
 24 cases × 3 models, judged by `claude-opus-4-8` on Vertex. Vertex `global` region.
-Committed run: [`results/2026-07-12T23:22:55Z.json`](results/2026-07-12T23:22:55Z.json)
+Committed run: [`results/2026-07-12T23-22-55Z.json`](results/2026-07-12T23-22-55Z.json)
 (the `.md` alongside it is the rendered report).
 
 | Model | Relevance | Correctness | Source quality | p50 latency | $/1k queries | Errors |
@@ -196,7 +196,7 @@ human labels to compute Cohen's κ per dimension:
 
 ```bash
 go run ./cmd/eval --kappa evals/labels/flash-lite.yaml \
-  --results evals/results/2026-07-12T23:22:55Z.json --kappa-model gemini-3.1-flash-lite
+  --results evals/results/2026-07-12T23-22-55Z.json --kappa-model gemini-3.1-flash-lite
 ```
 
 This is offline (no API calls). For the committed run (n=24 per dimension):
