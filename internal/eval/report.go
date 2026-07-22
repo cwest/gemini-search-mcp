@@ -100,20 +100,7 @@ func Render(results []Result) (string, []byte) {
 	// live run populated them.
 	aggs := aggregateByModel(results)
 	if anyPhase2(aggs) {
-		b.WriteString("## Faithfulness & citations (Phase 2)\n\n")
-		b.WriteString("Faithfulness = supported claims / total (claims checked against fetched source text). ")
-		b.WriteString("Citation precision/recall are ALCE-style. Averages over the cells that have a live result.\n\n")
-		b.WriteString("| Model | Faithfulness | Citation precision | Citation recall | Citation F1 |\n")
-		b.WriteString("| --- | --- | --- | --- | --- |\n")
-		for _, a := range aggs {
-			if a.NFaith == 0 && a.NCite == 0 {
-				continue
-			}
-			f1 := CitationResult{Precision: a.AvgCitePrec, Recall: a.AvgCiteRecall}.F1()
-			fmt.Fprintf(&b, "| %s | %.2f | %.2f | %.2f | %.2f |\n",
-				a.Model, a.AvgFaith, a.AvgCitePrec, a.AvgCiteRecall, f1)
-		}
-		b.WriteString("\n")
+		writePhase2(&b, results, aggs)
 	}
 
 	b.WriteString("## Category breakdown\n\n")

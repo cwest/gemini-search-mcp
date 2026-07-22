@@ -58,8 +58,11 @@ func TestAggregatePhase2Dimensions(t *testing.T) {
 
 func TestRenderEmitsPhase2SectionWhenPresent(t *testing.T) {
 	md, _ := Render(phase2Results())
-	if !strings.Contains(md, "Faithfulness & citations (Phase 2)") {
+	if !strings.Contains(md, "Faithfulness & citations") {
 		t.Errorf("phase 2 section missing:\n%s", md)
+	}
+	if !strings.Contains(md, "common grounded subset") {
+		t.Errorf("common-subset head-to-head heading missing:\n%s", md)
 	}
 	if !strings.Contains(md, "Citation F1") {
 		t.Errorf("phase 2 table header missing:\n%s", md)
