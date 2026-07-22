@@ -12,11 +12,44 @@ Casey's; below are the numbers behind a recommendation.
 
 ## Comparison table (model × metric)
 
-| Model | Faithfulness | Citation F1 (P / R) | Relevance | Correctness | Source qual | p50 latency | Grounded tok/s (mean / median) | Avg tokens/query | $/1k queries* |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| **gemini-3.1-flash-lite** (current default) | 0.90 | 0.49 (0.94 / 0.33) | 0.91 | 0.82 | **0.59** | 2810 ms | 90 / 89 | **328** | **$0.48** |
-| **gemini-3.6-flash** | **0.90** | **0.60 (0.97 / 0.43)** | 0.92 | **0.84** | 0.35 | 2330 ms | 99 / 81 | 375 | $2.59 |
-| **gemini-3.5-flash-lite** | 0.79 | 0.47 (0.89 / 0.32) | **0.93** | 0.83 | 0.36 | **2162 ms** | **110** / 79 | 326 | $0.73 |
+Relevance, correctness, source quality, latency, throughput, token, and cost
+columns are over all 24 cases. **Faithfulness and Citation F1 are N/A on cells
+that return zero sources**, so their per-model averages below are over *different*
+case counts (the scored-n is shown in the cell). Because the three models return
+sources on different cases, those two columns are **not** a like-for-like
+comparison in this table — read them alongside the common-subset row that follows.
+
+| Model | Faithfulness (scored-n) | Citation F1 (P / R) (scored-n) | Relevance | Correctness | Source qual | Ungrounded (0-source) | p50 latency | Grounded tok/s (mean / median) | Avg tokens/query | $/1k queries* |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| **gemini-3.1-flash-lite** (current default) | 0.90 (n=20) | 0.49 (0.94 / 0.33) (n=17) | 0.91 | 0.82 | **0.59** | **4/24 (17%)** | 2810 ms | 90 / 89 | **328** | **$0.48** |
+| **gemini-3.6-flash** | 0.90 (n=10) | **0.60 (0.97 / 0.43)** (n=10) | 0.92 | **0.84** | 0.35 | 13/24 (54%) | 2330 ms | 99 / 81 | 375 | $2.59 |
+| **gemini-3.5-flash-lite** | 0.79 (n=13) | 0.47 (0.89 / 0.32) (n=12) | **0.93** | 0.83 | 0.36 | 11/24 (46%) | **2162 ms** | **110** / 79 | 326 | $0.73 |
+
+### Faithfulness / citation on the common grounded subset (apples-to-apples)
+
+The whole-table faithfulness/citation averages sit on different denominators, so
+the "0.90 = 0.90 faithfulness tie" is a denominator artifact, not a real tie.
+Restricted to the **10 cases where all three models returned sources** (the only
+inputs where all three are actually scored on these two axes):
+
+| Model | Faithfulness (n=10) | Citation F1 (P / R) (n=9) |
+| --- | --- | --- |
+| **gemini-3.1-flash-lite** (current default) | **0.934** | 0.476 (0.92 / 0.32) |
+| **gemini-3.6-flash** | 0.905 | **0.610 (0.97 / 0.44)** |
+| **gemini-3.5-flash-lite** | 0.810 | 0.474 (1.00 / 0.31) |
+
+On identical inputs the current default **leads** faithfulness (0.934 > 0.905 >
+0.810); 3.6-flash's citation-recall/F1 win survives the common-subset cut. (The
+citation subset is n=9, not 10: on one common case a model produced no
+citation-eligible statements, so its precision/recall is N/A there.)
+
+**The ungrounded rate is itself a first-order result for a grounded-search tool.**
+`gemini-3.6-flash` answered from parametric knowledge with **zero** sources on
+13/24 cases (54%) — including `speed-of-light`, `boiling-point-water`,
+`largest-ocean`, and `tallest-mountain` — versus 4/24 for the current default.
+For a tool whose entire job is grounded citation, answering half the queries
+without searching is the strongest single argument against 3.6-flash, and it is
+also *why* its faithfulness/citation columns are averaged over so few cells.
 
 \* Token cost only, at official Vertex Standard-tier Global list prices
 (`pricing.go`, captured 2026-07-22). **Not modeled:** the flat grounded-search
@@ -68,15 +101,20 @@ if citation recall is a priority worth ~5× the token cost.**
 Reasoning, tied to the numbers:
 
 - **Neither candidate beats the current default on the core quality axes at a
-  price worth paying.** Faithfulness ties between 3.6-Flash and the current
-  default (0.90 = 0.90); 3.5-flash-lite is *worse* (0.79). Relevance/correctness
+  price worth paying.** On the common grounded subset (identical inputs, n=10) the
+  current default **leads faithfulness** — 0.934 vs 3.6-flash 0.905 vs
+  3.5-flash-lite 0.810; the whole-table "0.90 = 0.90" is a denominator artifact of
+  the models grounding on different cases, not a real tie. Relevance/correctness
   are within noise across all three (≤0.03 spread). The current default leads
-  **source quality** outright (0.59 vs 0.35/0.36).
-- **The one real quality win is 3.6-Flash's citation recall / F1** (F1 0.60 vs
-  0.49, recall 0.43 vs 0.33) — it attaches citations to more of its
-  source-supported statements. That is the low-recall gap called out in prior runs,
-  and 3.6-Flash genuinely narrows it. But it costs **~5.4× more per query** in
-  tokens (and uses ~14% more tokens), for no faithfulness gain.
+  **source quality** outright (0.59 vs 0.35/0.36) and grounds far more reliably
+  (17% ungrounded vs 54%/46%).
+- **The one real quality win is 3.6-Flash's citation recall / F1** — on the common
+  grounded subset F1 0.61 vs 0.48, recall 0.44 vs 0.32: when it does ground, it
+  attaches citations to more of its source-supported statements, narrowing the
+  low-recall gap called out in prior runs. But that win applies to the ~46% of
+  cases it actually searches; it costs **~5.4× more per query** in tokens (and uses
+  ~14% more tokens), and on the common subset it slightly *trails* the default on
+  faithfulness (0.905 vs 0.934).
 - **`gemini-3.5-flash-lite` is not a compelling swap:** marginally fastest and
   cheapest-ish, but its faithfulness drops to 0.79 (−0.11 vs current) and it does
   not lead any quality dimension meaningfully. Faithfulness is the metric that
