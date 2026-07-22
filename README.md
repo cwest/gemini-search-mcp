@@ -158,8 +158,76 @@ override the defaults.
 The default is `gemini-3.1-flash-lite`, and that's an evidence-based choice, not a
 guess. We built an eval harness (see [`evals/`](evals/README.md)) that runs a golden
 query set through several models and scores the answers with a *different* model
-family as judge (`claude-opus-4-8` on Vertex, to avoid self-grading bias). The
-headline from the current run (24 cases, 2026-07-12):
+family as judge (`claude-opus-4-8` on Vertex, to avoid self-grading bias). When new
+models GA, we re-run the sweep and publish the numbers here — including the ones that
+argue *against* the default, and the vendor claims that didn't hold up.
+
+### Latest sweep — the two GA'd models vs the default (2026-07-22)
+
+`gemini-3.6-flash` and `gemini-3.5-flash-lite` went GA and are now routable, so we
+re-ran the sweep against the current default (24 cases × 3 models = 72 cells, 0
+errors). **The default does not change: `gemini-3.1-flash-lite` stays.** Full report,
+methodology, and per-cell JSON:
+[`evals/results/2026-07-22-default-model-sweep.md`](evals/results/2026-07-22-default-model-sweep.md).
+
+| Model | Faithfulness (scored-n) | Citation F1 (P / R) (scored-n) | Relevance | Correctness | Source qual | Ungrounded (0-source) | p50 latency | Grounded tok/s (mean / median) | Avg tokens/query | $/1k queries* |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| **gemini-3.1-flash-lite** (default) | 0.90 (n=20) | 0.49 (0.94 / 0.33) (n=17) | 0.91 | 0.82 | **0.59** | **4/24 (17%)** | 2810 ms | 90 / 89 | **328** | **$0.48** |
+| gemini-3.6-flash | 0.90 (n=10) | **0.60 (0.97 / 0.43)** (n=10) | 0.92 | **0.84** | 0.35 | 13/24 (54%) | 2330 ms | 99 / 81 | 375 | $2.59 |
+| gemini-3.5-flash-lite | 0.79 (n=13) | 0.47 (0.89 / 0.32) (n=12) | **0.93** | 0.83 | 0.36 | 11/24 (46%) | **2162 ms** | **110** / 79 | 326 | $0.73 |
+
+\* Token cost only, at official Vertex Standard-tier Global list prices. It excludes
+the flat grounded-search surcharge (~$35 / 1k grounded prompts beyond the free tier),
+which is identical per prompt across all three models and dominates absolute cost.
+
+**That "0.90 = 0.90 faithfulness tie" is not a real tie — it's a denominator
+artifact.** Faithfulness and Citation F1 are N/A on any cell that returns zero
+sources, and the three models return sources on *different* cases, so those column
+averages sit on different case counts (the scored-n in each cell). Restricted to the
+**10 cases where all three models actually returned sources** (apples-to-apples):
+
+| Model | Faithfulness (n=10) | Citation F1 (P / R) (n=9) |
+| --- | --- | --- |
+| **gemini-3.1-flash-lite** (default) | **0.934** | 0.476 (0.92 / 0.32) |
+| gemini-3.6-flash | 0.905 | **0.610 (0.97 / 0.44)** |
+| gemini-3.5-flash-lite | 0.810 | 0.474 (1.00 / 0.31) |
+
+On identical inputs the default **leads** faithfulness (0.934 > 0.905 > 0.810), and
+`gemini-3.6-flash`'s one real quality win — citation recall / F1 — survives the
+common-subset cut (F1 0.61 vs 0.48).
+
+**The ungrounded rate is itself a first-order result for a grounded-search tool.**
+`gemini-3.6-flash` answered from parametric knowledge with **zero** sources on 13/24
+cases (54%) — including `speed-of-light`, `boiling-point-water`, and
+`tallest-mountain` — versus 4/24 (17%) for the default. For a tool whose whole job is
+grounded citation, answering half the queries without searching is the strongest
+single argument against 3.6-flash.
+
+**Two vendor claims that motivated the eval did *not* reproduce in this workload:**
+
+- **"~350 tok/s for Lite" — not reproduced.** Measured end-to-end grounded throughput
+  for `gemini-3.5-flash-lite` was **~110 tok/s mean, ~79 tok/s median** — ~3× below
+  the claim. (Caveat: these are grounded search calls, so wall-clock includes retrieval
+  and the redirect hop, not pure decode. Lite *is* the fastest on p50 latency, 2162 ms.)
+- **"~17% token efficiency for 3.6-Flash" — not reproduced (opposite sign).**
+  `gemini-3.6-flash` used **+14.3%** *more* tokens per query than the default, not
+  fewer (375 vs 328). Combined with its higher per-token output price, its token cost
+  per query is **~5.4×** the default. (`ThinkingBudget=0` is enforced for all models,
+  so 3.6-Flash's thinking capability is neutralized in this fast-grounded config —
+  consistent methodology, but the efficiency claim doesn't transfer to this use case.)
+
+The judge for this run is κ-validated against an independent human label set: relevance
+κ=1.00, source_quality κ=1.00, correctness κ=0.86 — all clear the κ>0.6 trust bar.
+
+**Conclusion: keep `gemini-3.1-flash-lite` as the default.** Neither new model beats
+it on the core quality axes at a price worth paying — the default leads faithfulness
+and source quality and grounds far more reliably. Choose `gemini-3.6-flash` only if
+citation recall is a product priority worth ~5× the token cost.
+
+### Prior sweep (2026-07-12) — how the default was first chosen
+
+The original sweep that set the default compared it against `gemini-3.5-flash` and
+`gemini-3.1-pro-preview`:
 
 | Model | Relevance | Correctness | Source quality | Faithfulness | Cite P/R | p50 latency | $/1k queries |
 | --- | --- | --- | --- | --- | --- | --- | --- |
@@ -169,13 +237,12 @@ headline from the current run (24 cases, 2026-07-12):
 
 Flash-Lite matched or beat the larger models on quality while being far faster and
 cheaper — because for grounded search, answer quality comes mostly from Google
-Search, not from model size. The judge itself is validated against a human
-reference label set (Cohen's κ): agreement is strong on relevance (κ=1.00),
-source quality (κ=0.87), and correctness (κ=0.63) — all three clear the κ>0.6
-trust bar, so the correctness numbers are judge-validated too. The full numbers, methodology,
-κ-validation, and instructions to reproduce or extend it are in
-[`evals/README.md`](evals/README.md). Pick a different model with `GEMINI_SEARCH_MODEL`
-if your workload disagrees — and if you do, run the eval and tell us what you found.
+Search, not from model size.
+
+The full numbers, methodology, κ-validation, and instructions to reproduce or extend
+the harness are in [`evals/README.md`](evals/README.md). Pick a different model with
+`GEMINI_SEARCH_MODEL` if your workload disagrees — and if you do, run the eval and
+tell us what you found.
 
 ## The web_search tool
 
