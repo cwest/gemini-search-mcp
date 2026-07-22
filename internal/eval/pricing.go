@@ -22,13 +22,27 @@ type modelPrice struct {
 	OutPerM float64 // USD per 1M output tokens
 }
 
-// pricing holds approximate Gemini list prices, as of 2026-06. These are
-// hardcoded and may drift from the live rate card; update as needed. Unknown
-// models are treated as $0 by CostUSD (see the caveat there).
+// pricing holds Gemini list prices, in USD per 1M tokens. Values are the Vertex
+// AI Standard-tier, Global-region rate card (captured 2026-07-22); they may
+// drift from the live rate card, so update as needed. Unknown models are treated
+// as $0 by CostUSD (see the caveat there).
+//
+// Note: grounded search also carries a flat per-prompt grounding charge
+// ($35 / 1k grounded prompts beyond the free tier) that CostUSD does NOT model —
+// it is identical across models, so it does not affect the relative cost ranking
+// this table drives. See evals/README.md for the token-vs-grounding cost split.
 var pricing = map[string]modelPrice{
-	"gemini-3.1-pro-preview": {InPerM: 1.25, OutPerM: 10.00},
-	"gemini-3.5-flash":       {InPerM: 0.30, OutPerM: 2.50},
-	"gemini-3.1-flash-lite":  {InPerM: 0.10, OutPerM: 0.40},
+	// Original committed-run models. gemini-3.5-flash Global text output is
+	// $9.00/1M; the prior $2.50 entry understated it. gemini-3.1-pro-preview
+	// Global input is $2.00/1M (prior $1.25 was the 2.5 Pro rate).
+	"gemini-3.1-pro-preview": {InPerM: 2.00, OutPerM: 12.00},
+	"gemini-3.5-flash":       {InPerM: 1.50, OutPerM: 9.00},
+	// Default-model-sweep candidate set. The current default's Global price is
+	// $0.25 in / $1.50 out (the prior $0.10/$0.40 entry was the 2.5 Flash-Lite
+	// rate). gemini-3.6-flash and gemini-3.5-flash-lite GA'd 2026-07-21.
+	"gemini-3.1-flash-lite": {InPerM: 0.25, OutPerM: 1.50},
+	"gemini-3.6-flash":      {InPerM: 1.50, OutPerM: 7.50},
+	"gemini-3.5-flash-lite": {InPerM: 0.30, OutPerM: 2.50},
 }
 
 // CostUSD returns the dollar cost of one grounded call given its token usage.

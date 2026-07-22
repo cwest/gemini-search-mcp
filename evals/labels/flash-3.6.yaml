@@ -1,0 +1,93 @@
+# gemini-search-mcp — human reference labels (gemini-3.6-flash answer set)
+#
+# Reference ("human-standard") ratings for judge validation via Cohen's kappa,
+# for the DEFAULT-MODEL-SWEEP run evals/results/2026-07-22T03:07:46Z.json.
+# Each row rates one case's gemini-3.6-flash answer on the dimensions the judge
+# scores, bucketed low | med | high (same thirds the judge's [0,1] scores are
+# bucketed into by BucketScore: <1/3 low, <2/3 med, else high).
+#
+# HOW THESE LABELS WERE PRODUCED
+# ------------------------------
+# 1. Answer set: the committed sweep run above, which persists the exact answer +
+#    cited sources each cell's judge scored (model gemini-3.6-flash, 24 cases).
+# 2. Drafting: ratings were drafted by reading each answer, its cited sources,
+#    and the case's expect_assertions, then applying the rubric below — WITHOUT
+#    copying the judge's numeric scores (an independent reference, not a copy of
+#    the verdict).
+# 3. Human sign-off: these drafts are the reference standard once reviewed and
+#    approved by a human (Casey); adjust any cell during review.
+#
+# RUBRIC (bucket definitions) — identical to labels/flash-lite.yaml
+# ----------------------------------------------------------------
+# relevance:  high directly answers; med drifts/over-pads; low off-target.
+# correctness (vs expect_assertions): high satisfies all; med gist w/ notable
+#   error or partial; low fails an assertion (wrong fact; ambiguous case that
+#   silently commits to one meaning; no-good-answer case that fabricates).
+# source_quality: high present/on-topic/reputable; med present but weak/mixed;
+#   low no sources or off-topic.
+#
+# NOTES ON SPECIFIC RULINGS (the interesting ones)
+# ------------------------------------------------
+# - jaguar-ambiguous / python-versus-snake: correctness=low. Both answers are
+#   well-written but describe ONLY one meaning (the animal; the language) and
+#   never flag the ambiguity the case requires — a category failure, not a
+#   knowledge error. source_quality follows what was returned (jaguar: 5 sources
+#   present -> med; python-versus-snake: 0 sources -> low).
+# - uk-prime-minister: correctness=med. The answer asserts a very recent (run-
+#   week) transition to a new PM off only 2 sources; freshness-sensitive and not
+#   independently corroborated here, so it is neither clearly right nor a clearly
+#   former-PM error — a genuine borderline the judge scored strictly (low).
+# - moon-landing-then-age: correctness=med. Apollo 11 / 1969 is right, but the
+#   answer's elapsed-years framing is only partially developed for the two-hop.
+# - no-source cells (venv, git-undo, tar-extract, boiling-point, largest-ocean,
+#   best-language, best-database, find-large-files, einstein, python-vs-snake,
+#   unicorn): source_quality=low — answered from model knowledge, 0 sources.
+
+- case_id: speed-of-light
+  scores: {relevance: high, correctness: high, source_quality: low}
+- case_id: tallest-mountain
+  scores: {relevance: high, correctness: high, source_quality: low}
+- case_id: go-latest-version
+  scores: {relevance: high, correctness: high, source_quality: high}
+- case_id: us-president-current
+  scores: {relevance: high, correctness: high, source_quality: high}
+- case_id: python-virtualenv
+  scores: {relevance: high, correctness: high, source_quality: low}
+- case_id: git-undo-last-commit
+  scores: {relevance: high, correctness: high, source_quality: low}
+- case_id: einstein-nobel-topic
+  scores: {relevance: high, correctness: high, source_quality: low}
+- case_id: ceo-then-hometown
+  scores: {relevance: high, correctness: high, source_quality: high}
+- case_id: jaguar-ambiguous
+  scores: {relevance: med, correctness: low, source_quality: high}
+- case_id: best-language
+  scores: {relevance: high, correctness: high, source_quality: low}
+- case_id: nonexistent-city
+  scores: {relevance: high, correctness: high, source_quality: high}
+- case_id: fake-study-citation
+  scores: {relevance: high, correctness: high, source_quality: med}
+- case_id: boiling-point-water
+  scores: {relevance: high, correctness: high, source_quality: low}
+- case_id: largest-ocean
+  scores: {relevance: high, correctness: high, source_quality: low}
+- case_id: python-latest-version
+  scores: {relevance: high, correctness: high, source_quality: high}
+- case_id: uk-prime-minister
+  scores: {relevance: high, correctness: med, source_quality: low}
+- case_id: tar-extract
+  scores: {relevance: high, correctness: high, source_quality: low}
+- case_id: find-large-files
+  scores: {relevance: high, correctness: high, source_quality: low}
+- case_id: moon-landing-then-age
+  scores: {relevance: high, correctness: med, source_quality: high}
+- case_id: telephone-inventor-country
+  scores: {relevance: high, correctness: high, source_quality: high}
+- case_id: python-versus-snake
+  scores: {relevance: med, correctness: low, source_quality: low}
+- case_id: best-database
+  scores: {relevance: high, correctness: high, source_quality: low}
+- case_id: unicorn-population
+  scores: {relevance: high, correctness: high, source_quality: low}
+- case_id: fake-treaty
+  scores: {relevance: high, correctness: high, source_quality: med}
