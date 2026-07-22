@@ -45,6 +45,17 @@ so you can weigh the numbers yourself:
 - **Correctness is judge-validated** (κ=0.63) — it clears the 0.6 trust bar,
   alongside relevance (κ=1.00) and source quality (κ=0.87) (see κ section below).
 
+## Default-model sweep (2026-07-22)
+
+Latest run re-evaluates the default against the two models that GA'd 2026-07-21
+(`gemini-3.6-flash`, `gemini-3.5-flash-lite`) on the same 24-case dataset. Full
+comparison table, the two vendor claims measured (not assumed), judge κ, and the
+recommendation: **[`results/2026-07-22-default-model-sweep.md`](results/2026-07-22-default-model-sweep.md)**.
+Committed run: [`results/2026-07-22T03:07:46Z.json`](results/2026-07-22T03:07:46Z.json).
+Headline: the data does not support changing the default — faithfulness ties or
+regresses, neither vendor claim reproduced, and the only quality win (3.6-Flash
+citation recall) costs ~5.4× the token spend.
+
 ## Results (2026-07-12)
 
 24 cases × 3 models, judged by `claude-opus-4-8` on Vertex. Vertex `global` region.
