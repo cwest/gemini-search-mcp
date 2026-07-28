@@ -11,6 +11,12 @@ project) or through AI Studio (an API key). Pick whichever you already have.
 On Vertex AI it can also use **Web Grounding for Enterprise**, Google's
 compliance-grade grounding tool — see [Grounding modes](#grounding-modes).
 
+New here? The companion write-up tells the story behind the tool — why it exists,
+how the grounding round-trip and citation extraction work, and how the default
+model was chosen on the evidence: [Building gemini-search-mcp: Grounding,
+Citations, and Choosing a Gemini
+Model](https://caseywest.com/building-gemini-search-mcp-grounding-citations-and-choosing-a-gemini-model).
+
 ## How it works
 
 ```mermaid
@@ -350,9 +356,9 @@ steering other agents (Gemini CLI, opencode, OpenAI-compatible clients), see
   — the Gemini API feature this server is built on.
 - [Web Grounding for Enterprise](https://cloud.google.com/vertex-ai/generative-ai/docs/grounding/web-grounding-enterprise?utm_campaign=CDR_0x5d16fa53_user-journey_b532564980&utm_medium=external&utm_source=blog)
   — the compliance-grade grounding tool behind `GEMINI_GROUNDING_MODE=enterprise`.
-- This project has a companion write-up series:
-  <!-- SERIES-SLUG-PLACEHOLDER: fill with the live slug when Part 1 publishes; a backlink to an unpublished post would 404. -->
-  <https://caseywest.com/SERIES-SLUG-PLACEHOLDER>
+- [Building gemini-search-mcp: Grounding, Citations, and Choosing a Gemini Model](https://caseywest.com/building-gemini-search-mcp-grounding-citations-and-choosing-a-gemini-model)
+  — the companion write-up: why the server exists, how the grounding round-trip
+  and citation extraction work in the code, and how the default model was measured.
 
 ## Contributing
 
