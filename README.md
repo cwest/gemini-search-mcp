@@ -367,3 +367,7 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) and our [Code of Conduct](CODE_OF_CONDUCT
 ## License
 
 This project is licensed under the [Apache-2.0 License](LICENSE).
+
+## Disclaimer
+
+This is not an officially supported Google product.
